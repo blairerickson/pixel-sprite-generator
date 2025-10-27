@@ -1,0 +1,270 @@
+# Pixel Sprite Generator Configuration
+
+# Stable Diffusion Settings
+sd:
+  backend: "automatic1111"  # Options: automatic1111, comfyui, diffusers
+  api_url: "http://127.0.0.1:7860"  # For A1111 or ComfyUI (Windows localhost)
+  
+  # Model paths (relative to SD models folder)
+  models:
+    base_model: "illustriousXL_v01.safetensors"
+    alternative_models:
+      - "noobai-XL-Vpred05.safetensors"
+      - "anythingV4.5.safetensors"
+  
+  loras:
+    - name: "pixel_character_sprite_illustrious"
+      path: "pixel_character_sprite_illustrious.safetensors"
+      default_weight: 0.7
+      triggers: ["pixel_character_sprite", "sprite sheet", "pixel art"]
+    
+    - name: "2d_pixel_toolkit"
+      path: "2DPixelToolkit.safetensors"
+      default_weight: 1.0
+      triggers: ["pixel", "pixel art", "pixelart"]
+    
+    - name: "ragnarok_style"
+      path: "ragnarok_online_sprite_illustrious.safetensors"
+      default_weight: 0.9
+      triggers: ["pixel", "full body", "simple background"]
+
+# Generation Settings
+generation:
+  default_prompt_suffix: "high quality, sharp pixels, clean edges, vibrant colors"
+  default_negative: "blurry, low quality, jpeg artifacts, watermark, text, signature, realistic, photograph, white background, transparent background, gradient background"
+  
+  presets:
+    character_sprite:
+      prompt_template: "{description}, pixel art, sprite, full body, clean linework, vibrant colors, solid color background"
+      width: 512
+      height: 512
+      steps: 25
+      cfg_scale: 7.0
+      sampler: "DPM++ 2M Karras"
+    
+    animation_frames:
+      prompt_template: "{description}, pixel art, animation frames, sprite sheet, multiple poses, solid color background"
+      width: 768
+      height: 256
+      steps: 35
+      cfg_scale: 8.0
+      sampler: "DPM++ 2M Karras"
+
+    animation_5_frames:
+      prompt_template: "{description}, pixel art, 5 frame animation strip, consistent poses, solid color background"
+      width: 640
+      height: 128
+      steps: 32
+      cfg_scale: 7.5
+      sampler: "DPM++ 2M Karras"
+
+    animation_20_frames:
+      prompt_template: "{description}, pixel art, 20 frame animation strip, fluid motion, solid color background"
+      width: 1280
+      height: 160
+      steps: 40
+      cfg_scale: 8.0
+      sampler: "DPM++ 2M Karras"
+    
+    icon:
+      prompt_template: "{description}, pixel art, game icon, centered, solid color background"
+      width: 256
+      height: 256
+      steps: 25
+      cfg_scale: 7.0
+      sampler: "Euler a"
+
+# Sprite Processing
+sprite_processing:
+  background_removal:
+    method: "rembg"  # Options: chromakey, rembg, transparent-background
+    
+    # REMBG SETTINGS (AI-based removal)
+    rembg:
+      # Aggressiveness control - lower = more conservative
+      aggressiveness_threshold: 75  # % transparency before fallback (was 90)
+      pixel_art_mode: true  # Enable pixel art optimizations
+      preserve_outlines: true  # Try to preserve black pixel outlines
+      outline_threshold: 50  # Alpha threshold for outline preservation (0-255)
+      post_process_mask: true  # Clean up mask edges after removal
+      mask_dilation: 2  # Pixels to dilate mask to preserve edges (0-5)
+      
+      # Model selection (rembg supports multiple models)
+      model: "u2net"  # Options: u2net, u2netp, u2net_human_seg, silueta, isnet-general-use
+      
+    # CHROMAKEY SETTINGS (color-based removal - better for pixel art)
+    chromakey:
+      auto_sample_corners: true  # Auto-detect background color
+      corner_sample_size: 20  # Pixels to sample from each corner
+      tolerance: 15  # Color distance tolerance (0-50)
+      adaptive_tolerance: true  # Auto-adjust tolerance based on image
+      preserve_outlines: true  # Special handling for black outlines
+      outline_preservation_strength: 3  # How much to protect outlines (0-5)
+      
+    # HYBRID MODE SETTINGS
+    hybrid_mode: true  # Try rembg first, fallback to chromakey
+    fallback_threshold: 75  # % transparency to trigger fallback
+    force_chromakey_for_pixel_art: false  # Skip rembg entirely for pixel art
+    
+    # LEGACY SETTINGS (kept for compatibility)
+    enable_inpaint: false  # Disabled - not needed with current approach
+    inpaint_border: 80  # For inpainting mode (currently disabled)
+    default_background_color: "#FF00FF"  # Fallback color for chromakey
+    edge_smoothing: false  # Disable for pixel-perfect edges
+    noise_reduction: true  # Clean up stray pixels after removal
+    preprocess:
+      enabled: true  # ENABLED: Convert to true pixel art
+      quantize_colors: true
+      palette_size: 16  # Fewer colors = more chunky pixel art
+      median_filter: 0  # Disabled - palette reduction handles noise
+      resize_for_quality: true  # ENABLED: Downscale to chunky pixels
+      target_size: 64  # 64x64 = true pixel art scale (8x8 pixel blocks at 512x512)
+    histogram_bins: 16
+    mask_refine:
+      enabled: false  # DISABLED to diagnose artifacts
+      kernel: 3
+      iterations: 1
+    fallback_method: "rembg"
+    save_debug_mask: false  # DISABLED for performance
+  
+  sprite_extraction:
+    enabled: true
+    auto_detect: true
+    grid_size: null  # Auto-detect or [width, height]
+    padding: 2
+    min_sprite_size: 48  # Good for 512x512 upscaled from 64x64 (64px sprite at 64x64 = 512px at 512x512)
+    solidity_threshold: 0.6  # High threshold = only solid sprites (not fragments)
+    merge_distance: 10
+    morphology_kernel: 5  # Larger kernel for 512x512 scale
+  
+  output:
+    format: "png"
+    individual_sprites: true
+    sprite_sheet: true
+    metadata_json: true
+
+  quality_control:
+    enabled: true
+    min_background_percent: 12
+    max_background_percent: 85
+    min_sprite_percent: 5
+    max_components: 8
+    export_debug: true
+    export_metrics_csv: true
+    qa_prefix: "qa"
+
+# Paths
+paths:
+  output_dir: "../output"
+  temp_dir: "../temp"
+  cache_dir: "../cache"
+
+# API Settings
+api:
+  host: "0.0.0.0"
+  port: 8010
+  cors_origins: ["*"]
+  max_concurrent_jobs: 4
+  
+# Animation System
+animation:
+  # Reference sheet generation (for consistency)
+  reference_sheet:
+    enabled: true
+    generate_first: true  # Generate ref before animation
+    directions: [south, west, east, north]  # Default 4-dir
+    size: 512
+    reference_prompt_template: "{description}, pixel art, sprite, full body, clean linework, vibrant colors, solid color background, {direction}"
+    
+  # Animation generation
+  generation:
+    default_type: "walk"
+    default_guidance: "auto"  # Auto-select best available
+    frame_counts:
+      idle: 2
+      walk: 8
+      run: 8
+      attack: 6
+      cast_spell: 8
+      death: 6
+      jump: 4
+      crouch: 3
+      hurt: 4
+    prompt_template: "{description}, pixel art, {animation_type} animation, {direction}, frame {frame_index}, sprite, full body, clean linework, vibrant colors, solid color background"
+    
+  # Guidance methods priority (fallback order)
+  guidance:
+    priority: ["controlnet", "img2img_inpaint", "template_pose", "prompt_only"]
+    
+    controlnet:
+      enabled: auto  # Auto-detect
+      preferred_models: ["control_openpose", "control_canny"]
+      preprocessor: "openpose_full"
+      
+    img2img_inpaint:
+      enabled: true
+      denoising_strength: 0.7
+      reference_influence: 0.8
+      
+    template_pose:
+      enabled: true
+      template_directory: "templates"
+      
+  # Output organization
+  output:
+    create_sprite_sheet: true  # Combine all frames
+    individual_frames: true
+    include_reference: true
+    organize_by_direction: true
+
+  pipeline:
+    enable_motion_pipeline: false
+    stage_a:
+      enabled: true
+      motion_module: "animatediff.motion_lcm.safetensors"
+      controlnet_model: "control_openpose"
+      max_frames: 16
+    stage_b:
+      enabled: true
+      inpaint_steps: 28
+      cfg_scale: 7.5
+    stage_c:
+      enabled: true
+      warp_strength: 0.35
+      smoothing_passes: 2
+    ip_adapter:
+      enabled: true
+      model: "ip-adapter_sdxl_image.safetensors"
+    logging:
+      emit_stage_timings: true
+      save_intermediate_assets: true
+
+  # Breathing/Alive animation settings
+  breathing:
+    frame_count: 8
+    vertical_scale_amplitude: 0.12
+    horizontal_scale_amplitude: 0.04
+    torso_height_ratio: 0.55
+    sheet_gap: 0
+
+  external_video:
+    enabled: false
+    provider: "wan"  # Options: wan, pika
+    wan:
+      endpoint: "https://api.wan.example/video"
+      api_key_env: "WAN_API_KEY"
+      max_frames: 16
+    pika:
+      endpoint: "https://api.pikalabs.com/video"
+      api_key_env: "PIKA_API_KEY"
+    downsample:
+      target_resolution: [512, 512]
+      palette_size: 32
+
+# Performance
+performance:
+  gpu_device: "cuda"  # Options: cuda, cpu
+  half_precision: true  # Use fp16 for faster generation
+  attention_slicing: true
+  vae_tiling: false  # Enable for very large images
+

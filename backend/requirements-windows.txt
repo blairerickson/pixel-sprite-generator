@@ -1,0 +1,26 @@
+# Minimal Windows requirements (no heavy ML libraries)
+# Use Automatic1111 for generation, backend just processes results
+
+# Core API
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+python-multipart==0.0.6
+
+# Image Processing
+Pillow==10.1.0
+opencv-python==4.8.1.78
+numpy==1.26.4
+scipy==1.11.4
+
+# Background Removal (lightweight)
+# AI-based background removal (much better than chromakey for pixel art)
+rembg==2.0.56
+# Use chromakey method instead (no extra deps needed)
+
+# Utilities
+pyyaml==6.0.1
+python-dotenv==1.0.0
+aiofiles==23.2.1
+requests==2.31.0
+

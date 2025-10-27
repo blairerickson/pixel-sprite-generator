@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Sprite Generator - Demo Mode</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 Pixel Sprite Generator</h1>
+            <p class="subtitle">Local Stable Diffusion for Game Assets</p>
+            <div class="status connected">
+                <span class="status-indicator"></span>
+                <span>Demo Mode - No Backend Required</span>
+            </div>
+        </header>
+
+        <main>
+            <div class="panel generation-panel">
+                <h2>Generate Sprites</h2>
+                
+                <div class="demo-notice" style="background: #667eea; color: white; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <strong>📌 Demo Mode</strong>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">
+                        This is a demo of the interface. Install the backend to generate real sprites.
+                        <a href="../QUICKSTART.md" style="color: #ffd700; text-decoration: underline;">See setup guide →</a>
+                    </p>
+                </div>
+                
+                <form id="generateForm">
+                    <div class="form-group">
+                        <label for="prompt">Prompt</label>
+                        <textarea id="prompt" rows="3" required 
+                            placeholder="e.g., fantasy knight warrior, blue armor, holding sword">pixel art knight warrior, blue armor, sword and shield</textarea>
+                        <small>Describe the character or object you want to generate</small>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="preset">Preset</label>
+                            <select id="preset">
+                                <option value="character_sprite">Character Sprite</option>
+                                <option value="animation_frames">Animation Frames</option>
+                                <option value="icon">Icon</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="lora">LoRA Model</label>
+                            <select id="lora">
+                                <option value="">None</option>
+                                <option value="pixel_character_sprite">Game Character Sprites</option>
+                                <option value="2d_pixel_toolkit">2D Pixel Toolkit</option>
+                                <option value="ragnarok_style">Ragnarok Online Style</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="width">Width</label>
+                            <input type="number" id="width" placeholder="Auto" min="64" max="2048" step="64" value="512">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="height">Height</label>
+                            <input type="number" id="height" placeholder="Auto" min="64" max="2048" step="64" value="512">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="batchSize">Count</label>
+                            <input type="number" id="batchSize" value="1" min="1" max="4">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="negativePrompt">Negative Prompt (Optional)</label>
+                        <textarea id="negativePrompt" rows="2" 
+                            placeholder="blurry, low quality, realistic...">blurry, low quality, realistic, photograph</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="removeBackground" checked>
+                            Remove Background
+                        </label>
+                        <label>
+                            <input type="checkbox" id="extractSprites" checked>
+                            Extract Individual Sprites
+                        </label>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" id="generateBtn" class="btn btn-primary">
+                            Generate Sprites (Demo)
+                        </button>
+                        <button type="button" id="clearBtn" class="btn btn-secondary">
+                            Clear
+                        </button>
+                    </div>
+                </form>
+
+                <div id="generationProgress" class="progress-container" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p id="progressText">Processing...</p>
+                </div>
+            </div>
+
+            <div class="panel upload-panel">
+                <h2>Process Existing Image</h2>
+                
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-content">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <p>Demo Mode - Upload disabled</p>
+                        <small>Install backend to enable</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel results-panel" id="resultsPanel">
+                <h2>Demo Results</h2>
+                <div id="results" class="results-grid">
+                    <!-- Demo sprites will be shown here -->
+                    <div class="result-item">
+                        <div style="width: 100%; height: 200px; background: repeating-conic-gradient(#808080 0% 25%, transparent 0% 50%) 50% / 20px 20px; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
+                            <div style="background: #4a5568; padding: 2rem; border-radius: 8px; text-align: center;">
+                                <p style="color: #e2e8f0; margin: 0;">Demo Sprite 1</p>
+                                <small style="color: #a0aec0;">512x512px</small>
+                            </div>
+                        </div>
+                        <div class="result-actions">
+                            <button class="btn btn-secondary btn-sm" disabled>
+                                Download (Demo)
+                            </button>
+                        </div>
+                    </div>
+                    <div class="result-item">
+                        <div style="width: 100%; height: 200px; background: repeating-conic-gradient(#808080 0% 25%, transparent 0% 50%) 50% / 20px 20px; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
+                            <div style="background: #4a5568; padding: 2rem; border-radius: 8px; text-align: center;">
+                                <p style="color: #e2e8f0; margin: 0;">Demo Sprite 2</p>
+                                <small style="color: #a0aec0;">64x64px</small>
+                            </div>
+                        </div>
+                        <div class="result-actions">
+                            <button class="btn btn-secondary btn-sm" disabled>
+                                Download (Demo)
+                            </button>
+                        </div>
+                    </div>
+                    <div class="result-item">
+                        <div style="width: 100%; height: 200px; background: repeating-conic-gradient(#808080 0% 25%, transparent 0% 50%) 50% / 20px 20px; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
+                            <div style="background: #4a5568; padding: 2rem; border-radius: 8px; text-align: center;">
+                                <p style="color: #e2e8f0; margin: 0;">Demo Sprite 3</p>
+                                <small style="color: #a0aec0;">128x128px</small>
+                            </div>
+                        </div>
+                        <div class="result-actions">
+                            <button class="btn btn-secondary btn-sm" disabled>
+                                Download (Demo)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel history-panel">
+                <h2>Recent Jobs</h2>
+                <div id="jobHistory" class="job-list">
+                    <div class="job-item">
+                        <div class="job-info">
+                            <div><strong>a1b2c3d4...</strong></div>
+                            <div style="font-size: 0.85rem; color: var(--text-dim);">Generated: pixel art knight</div>
+                        </div>
+                        <div class="job-status completed">completed</div>
+                    </div>
+                    <div class="job-item">
+                        <div class="job-info">
+                            <div><strong>e5f6g7h8...</strong></div>
+                            <div style="font-size: 0.85rem; color: var(--text-dim);">Generated: pixel art mage wizard</div>
+                        </div>
+                        <div class="job-status completed">completed</div>
+                    </div>
+                    <div class="job-item">
+                        <div class="job-info">
+                            <div><strong>i9j0k1l2...</strong></div>
+                            <div style="font-size: 0.85rem; color: var(--text-dim);">Generated: pixel art health potion</div>
+                        </div>
+                        <div class="job-status completed">completed</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Demo mode - simple interactions
+        document.getElementById('generateForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const progressContainer = document.getElementById('generationProgress');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const generateBtn = document.getElementById('generateBtn');
+            
+            // Show progress
+            progressContainer.style.display = 'block';
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Generating (Demo)...';
+            
+            // Simulate progress
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                progressFill.style.width = progress + '%';
+                
+                if (progress <= 30) {
+                    progressText.textContent = 'Loading models...';
+                } else if (progress <= 60) {
+                    progressText.textContent = 'Generating image...';
+                } else if (progress <= 90) {
+                    progressText.textContent = 'Processing sprites...';
+                } else {
+                    progressText.textContent = 'Complete!';
+                    clearInterval(interval);
+                    
+                    setTimeout(() => {
+                        progressContainer.style.display = 'none';
+                        generateBtn.disabled = false;
+                        generateBtn.textContent = 'Generate Sprites (Demo)';
+                        progressFill.style.width = '0%';
+                        
+                        alert('✨ Demo Complete!\n\nIn real mode, your sprites would be generated here.\n\nSee QUICKSTART.md to set up the backend.');
+                    }, 1000);
+                }
+            }, 200);
+        });
+        
+        document.getElementById('clearBtn').addEventListener('click', function() {
+            document.getElementById('generateForm').reset();
+        });
+    </script>
+</body>
+</html>
+

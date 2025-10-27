@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pearl Pixel Salon</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;500;600;700&family=Grandstander:wght@600;700&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/frontend/style.css">
+</head>
+<body>
+    <div class="background-stage" id="backgroundStage" aria-hidden="true">
+        <img src="/assets/background.png" alt="Studio backdrop" id="backgroundImage">
+        <div class="background-gradient"></div>
+    </div>
+
+    <div class="pixel-snowflakes"></div>
+    
+    <div class="app-container">
+        <header class="hero" id="hero" role="banner">
+            <div class="hero__content">
+                <span class="hero__subtitle">Boutique Pixel Animation Atelier</span>
+                <h1 class="hero__title">Pearl Pixel Salon</h1>
+                <p class="hero__tagline">Where sprites rehearse, dream, and debut.</p>
+            </div>
+
+            <div class="hero__actions">
+                <button class="hero-btn" id="newBackgroundBtn">
+                    <span class="hero-btn__icon">◆</span>
+                    <span>New Backdrop</span>
+                </button>
+                <button class="hero-btn" id="loadProjectBtn">
+                    <span class="hero-btn__icon">◆</span>
+                    <span>Open Project</span>
+                </button>
+                <button class="hero-btn" id="helpBtn">
+                    <span class="hero-btn__icon">◆</span>
+                    <span>Studio Tour</span>
+                </button>
+                <button class="hero-btn" id="ambientSoundBtn" aria-pressed="false">
+                    <span class="hero-btn__icon">◆</span>
+                    <span>Ambient Sound</span>
+                </button>
+                <button class="hero-btn" id="accessibilityBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="accessibilityPanel">
+                    <span class="hero-btn__icon">◆</span>
+                    <span>Accessibility</span>
+                </button>
+                <div class="hero__status" id="statusBadge" role="status" aria-live="polite">
+                <svg class="status-pulse" width="12" height="12">
+                    <circle cx="6" cy="6" r="5" />
+                </svg>
+                <span id="statusText">Initializing...</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="mascot-layer" aria-hidden="true">
+            <div class="mascot mascot--frog" data-depth="0.35"></div>
+            <div class="mascot mascot--wizard" data-depth="0.55"></div>
+            <div class="mascot mascot--robot" data-depth="0.25"></div>
+        </div>
+
+        <main class="studio" role="main">
+            <!-- LEFT: Gallery Panel -->
+            <aside class="studio-gallery gallery-panel" aria-label="Gallery">
+                <div class="gallery-panel-header">
+                    <h3>Gallery</h3>
+                    <button class="gallery-options-toggle" id="galleryOptionsToggle" title="Gallery options">⚙</button>
+                </div>
+                <div class="gallery" id="gallery" role="region" aria-label="Generated gallery"></div>
+                <div class="filmstrip-view" id="filmstrip" style="display: none;"></div>
+            </aside>
+
+            <!-- CENTER: Teleporter Stage -->
+            <section class="studio-center" aria-label="Sprite Stage">
+                <div class="teleporter-stage">
+                    <div class="teleporter-platform"></div>
+                    <div class="teleporter-rings">
+                        <div class="teleporter-ring"></div>
+                        <div class="teleporter-ring"></div>
+                        <div class="teleporter-ring"></div>
+                    </div>
+                    <div class="teleporter-canvas-wrapper">
+                        <canvas id="mainCanvas" width="512" height="512"></canvas>
+                        <div class="canvas-overlay" id="canvasOverlay">
+                            <svg class="canvas-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                            <p>Your creation materializes here</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Playback Controls (when animation loaded) -->
+                <div class="playback-controls" id="playbackControls" style="display: none;" aria-label="Playback controls">
+                    <div class="playback-cluster">
+                        <button class="control-btn control-btn--prev" id="prevFrameBtn" title="Previous frame" aria-label="Previous frame"></button>
+                        <button class="control-btn control-btn--play" id="playBtn" title="Play/Pause">◆</button>
+                        <button class="control-btn control-btn--next" id="nextFrameBtn" title="Next frame" aria-label="Next frame"></button>
+                    </div>
+                    <div class="timeline">
+                        <div class="timeline-header">
+                            <span id="frameLabel">Frame 1 / 1</span>
+                            <button class="loop-toggle" id="loopToggle">Loop</button>
+                        </div>
+                        <input type="range" id="frameSlider" min="0" max="0" value="0" class="timeline-slider">
+                    </div>
+                    <div class="fps-stack">
+                        <label>
+                            <span class="fps-label">FPS <span id="fpsLabel">12</span></span>
+                            <input type="range" id="fpsSlider" min="2" max="24" value="12" class="fps-slider" title="Animation speed">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Stage Controls -->
+                <div class="stage-controls">
+                    <button class="stage-btn" id="gridToggle" aria-pressed="false">Grid</button>
+                    <button class="stage-btn" id="onionToggle" aria-pressed="false">Onion</button>
+                    <button class="stage-btn" id="transparencyToggle" aria-pressed="false">Transparency</button>
+                    <div class="stage-zoom" role="group" aria-label="Zoom controls">
+                        <button class="stage-btn stage-btn--icon" id="zoomOutBtn" aria-label="Zoom out">–</button>
+                        <span class="stage-zoom__value" id="zoomLevelLabel">100%</span>
+                        <button class="stage-btn stage-btn--icon" id="zoomInBtn" aria-label="Zoom in">＋</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RIGHT: Prompt Notepad -->
+            <aside class="studio-prompt notepad-sheet" aria-label="Creation Notepad">
+                <h3 class="notepad-header">Describe your vision</h3>
+                
+                <form id="generateForm" class="compose-form">
+                    <!-- Mode Selector -->
+                    <section class="mode-selector" aria-label="Mode presets">
+                        <button type="button" class="mode-pill active" data-mode="character">
+                            <span class="mode-pill__icon">◆</span>
+                            <span class="mode-pill__label">Character</span>
+                        </button>
+                        <button type="button" class="mode-pill" data-mode="alive">
+                            <span class="mode-pill__icon">◆</span>
+                            <span class="mode-pill__label">Alive!</span>
+                        </button>
+                        <button type="button" class="mode-pill" data-mode="anim5">
+                            <span class="mode-pill__icon">◆</span>
+                            <span class="mode-pill__label">Storyboard</span>
+                        </button>
+                        <button type="button" class="mode-pill" data-mode="anim20">
+                            <span class="mode-pill__icon">◆</span>
+                            <span class="mode-pill__label">Feature</span>
+                        </button>
+                        <input type="hidden" id="preset" value="character_sprite">
+                    </section>
+
+                    <!-- Prompt Field -->
+                    <div class="prompt-field-enhanced">
+                        <button type="button" class="prompt-randomizer" onclick="refreshRandomPrompt()">🎲 Random</button>
+                        <label class="note-field">
+                            <textarea id="prompt" class="note-input" rows="5" required placeholder="A brave knight..."></textarea>
+                        </label>
+                    </div>
+
+                    <!-- Collapsible Advanced Options -->
+                    <details class="compact-field-group">
+                        <summary>Advanced Options</summary>
+                        
+                        <label class="note-field note-field--compact">
+                            <span class="note-label">Avoid</span>
+                            <textarea id="negativePrompt" class="note-input" rows="2" placeholder="blurry, realistic, low detail..."></textarea>
+                        </label>
+
+                        <label class="field-select">
+                            <span class="field-label">Style Library</span>
+                            <select id="lora" class="field-input">
+                                <option value="">Style: Base model</option>
+                            </select>
+                        </label>
+
+                        <div class="field-grid">
+                            <label class="field-compact">
+                                <span class="field-label">Width</span>
+                                <input type="number" id="width" class="field-input-sm" placeholder="512">
+                            </label>
+                            <label class="field-compact">
+                                <span class="field-label">Height</span>
+                                <input type="number" id="height" class="field-input-sm" placeholder="512">
+                            </label>
+                            <label class="field-compact">
+                                <span class="field-label">Variations</span>
+                                <input type="number" id="batchSize" class="field-input-sm" value="1" min="1" max="4">
+                            </label>
+                            <label class="field-compact">
+                                <span class="field-label">Seed</span>
+                                <input type="number" id="seed" class="field-input-sm" value="-1">
+                            </label>
+                        </div>
+
+                        <div class="toggles">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="removeBackground">
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-text">Remove BG</span>
+                            </label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="extractSprites" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-text">Extract</span>
+                            </label>
+                        </div>
+                    </details>
+
+                    <!-- Animation Controls (shown when needed) -->
+                    <details class="compact-field-group" id="animationControls" style="display: none;">
+                        <summary>Animation Settings</summary>
+                        
+                        <div class="animation-grid">
+                            <label class="field-select">
+                                <span class="field-label">Motion</span>
+                                <select id="animationType" class="field-input">
+                                    <option value="idle">Idle</option>
+                                    <option value="walk">Walk</option>
+                                    <option value="run">Run</option>
+                                    <option value="attack">Attack</option>
+                                    <option value="cast_spell">Cast Spell</option>
+                                </select>
+                            </label>
+                            <label class="field-select">
+                                <span class="field-label">Directions</span>
+                                <select id="directions" class="field-input">
+                                    <option value="4dir">4 Directions</option>
+                                    <option value="8dir">8 Directions</option>
+                                </select>
+                            </label>
+                            <label class="field-select">
+                                <span class="field-label">Guidance</span>
+                                <select id="guidanceMethod" class="field-input">
+                                    <option value="auto">Auto</option>
+                                    <option value="controlnet">ControlNet</option>
+                                    <option value="template_pose">Template</option>
+                                </select>
+                            </label>
+                        </div>
+                        
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="generateReference" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-text">Generate reference first</span>
+                        </label>
+
+                        <!-- Storyboard-specific controls -->
+                        <div id="storyboardControls" style="display: none;">
+                            <label class="field-select">
+                                <span class="field-label">Motion Preset</span>
+                                <select id="motionPreset" class="field-input">
+                                    <option value="auto">Auto</option>
+                                    <option value="heroic">Heroic</option>
+                                    <option value="mystic">Mystic</option>
+                                </select>
+                            </label>
+                            <label class="field-select">
+                                <span class="field-label">Pipeline</span>
+                                <select id="motionPipelineMode" class="field-input">
+                                    <option value="disabled">Baseline</option>
+                                    <option value="full">Full Pipeline</option>
+                                </select>
+                            </label>
+                            <div class="toggles">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="usePrevSeedToggle">
+                                    <span class="toggle-slider"></span>
+                                    <span class="toggle-text">Lock seed</span>
+                                </label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="referencePreviewToggle" checked>
+                                    <span class="toggle-slider"></span>
+                                    <span class="toggle-text">Show refs</span>
+                                </label>
+                            </div>
+                        </div>
+                    </details>
+
+                    <!-- CREATE Button & Progress (Bottom of notepad) -->
+                    <div class="notepad-create-dock">
+                        <button type="submit" class="generate-btn" id="generateBtn">
+                            <span class="btn-icon">✨</span>
+                            <span>Create</span>
+                        </button>
+                        <div class="progress-bar" id="progressBar" style="display: none;" role="status" aria-live="polite">
+                            <div class="progress-fill" id="progressFill"></div>
+                            <span class="progress-text" id="progressText">Preparing...</span>
+                        </div>
+                    </div>
+                </form>
+            </aside>
+
+            <!-- OLD STRUCTURE TO BE REMOVED -->
+            <aside class="sidebar storyboard-desk glass" aria-label="Storyboard Desk" style="display: none;">
+                <header class="panel-header">
+                    <div class="panel-heading">
+                        <h2>Storyboard Desk</h2>
+                        <p>Compose prompts, set styles, and guide the scene.</p>
+                    </div>
+                    <button class="panel-toggle" id="toggleStoryboard">Collapse</button>
+                </header>
+
+                <form id="generateForm-old" class="compose-form">
+                    <section class="mode-selector" aria-label="Mode presets">
+                <header class="panel-header">
+                    <div class="panel-heading">
+                        <h2>Storyboard Desk</h2>
+                        <p>Compose prompts, set styles, and guide the scene.</p>
+                    </div>
+                    <button class="panel-toggle" id="toggleStoryboard">Collapse</button>
+                </header>
+
+                <form id="generateForm" class="compose-form">
+                    <section class="mode-selector" aria-label="Mode presets">
+                        <button type="button" class="mode-pill active" data-mode="character">
+                            <span class="mode-pill__icon">◆</span>
+                            <span class="mode-pill__label">Character</span>
+                            <span class="mode-pill__hint">Single hero pose</span>
+                        </button>
+                        <button type="button" class="mode-pill" data-mode="alive">
+                            <span class="mode-pill__icon">◆</span>
+                            <span class="mode-pill__label">Alive!</span>
+                            <span class="mode-pill__hint">Animate an existing sheet</span>
+                        </button>
+                        <button type="button" class="mode-pill" data-mode="anim5">
+                            <span class="mode-pill__icon">◆</span>
+                            <span class="mode-pill__label">Storyboard</span>
+                            <span class="mode-pill__hint">5 frame vignette</span>
+                        </button>
+                        <button type="button" class="mode-pill" data-mode="anim20">
+                            <span class="mode-pill__icon">◆</span>
+                            <span class="mode-pill__label">Feature</span>
+                            <span class="mode-pill__hint">20 frame sequence</span>
+                        </button>
+                        <input type="hidden" id="preset" value="character_sprite">
+                    </section>
+
+                    <section class="prompt-card">
+                        <label class="note-field">
+                            <span class="note-label">Describe your vision</span>
+                            <textarea id="prompt" class="note-input" rows="4" required placeholder="A brave knight in shining armor, ready for adventure..."></textarea>
+                        </label>
+
+                        <label class="note-field note-field--compact">
+                            <span class="note-label">Avoid</span>
+                            <textarea id="negativePrompt" class="note-input" rows="2" placeholder="blurry, realistic, low detail..."></textarea>
+                        </label>
+
+                        <div class="prompt-templates" id="promptTemplates">
+                            <h3>Inspiration Library</h3>
+                            <div class="prompt-templates__grid">
+                                <button type="button" class="prompt-chip" data-template="heroic knight, shining armor, warm rim light, pixel art">Heroic Knight</button>
+                                <button type="button" class="prompt-chip" data-template="forest spirit, glowing eyes, mossy cloak, pixel art">Forest Spirit</button>
+                                <button type="button" class="prompt-chip" data-template="retro robot, chrome, neon panels, pixel art">Retro Robot</button>
+                                <button type="button" class="prompt-chip" data-template="enchanted village, lantern lights, snowy evening, pixel art">Snowy Village</button>
+                                <button type="button" class="prompt-chip" data-template="cozy studio interior, canvases, animation desk, pixel art">Cozy Studio</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="field-stack">
+                        <label class="field-select">
+                            <span class="field-label">Style Library</span>
+                            <select id="lora" class="field-input">
+                                <option value="">Style: Base model</option>
+                            </select>
+                        </label>
+
+                        <div class="field-grid">
+                            <label class="field-compact">
+                                <span class="field-label">Width</span>
+                                <input type="number" id="width" class="field-input-sm" placeholder="512">
+                            </label>
+                            <label class="field-compact">
+                                <span class="field-label">Height</span>
+                                <input type="number" id="height" class="field-input-sm" placeholder="512">
+                            </label>
+                            <label class="field-compact">
+                                <span class="field-label">Variations</span>
+                                <input type="number" id="batchSize" class="field-input-sm" value="1" min="1" max="4">
+                            </label>
+                            <label class="field-compact">
+                                <span class="field-label">Seed</span>
+                                <input type="number" id="seed" class="field-input-sm" value="-1">
+                            </label>
+                    </div>
+
+                        <div class="toggles">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="removeBackground">
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-text">Remove background</span>
+                            </label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="extractSprites" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-text">Extract frames</span>
+                            </label>
+                        </div>
+                    </section>
+
+                    <section id="animationControls" class="animation-controls" aria-live="polite" style="display: none;">
+                        <header class="section-heading">
+                            <h3>Animation Blueprint</h3>
+                            <p>Select motion, directions, and guidance.</p>
+                        </header>
+                        <div class="animation-grid">
+                            <label class="field-select">
+                                <span class="field-label">Motion</span>
+                                <select id="animationType" class="field-input">
+                                    <option value="idle">Idle (Breathing)</option>
+                                    <option value="walk">Walk Cycle</option>
+                                    <option value="run">Run Cycle</option>
+                                    <option value="attack">Attack</option>
+                                    <option value="cast_spell">Cast Spell</option>
+                                    <option value="death">Death</option>
+                                    <option value="jump">Jump</option>
+                                    <option value="crouch">Crouch</option>
+                                    <option value="hurt">Hurt</option>
+                                </select>
+                            </label>
+                            <label class="field-select">
+                                <span class="field-label">Directions</span>
+                                <select id="directions" class="field-input">
+                                    <option value="4dir">4 Directions (N,S,E,W)</option>
+                                    <option value="8dir">8 Directions (All)</option>
+                                </select>
+                            </label>
+                            <label class="field-select">
+                                <span class="field-label">Guidance</span>
+                                <select id="guidanceMethod" class="field-input">
+                                    <option value="auto">Auto (Best Available)</option>
+                                    <option value="controlnet">ControlNet (Highest Quality)</option>
+                                    <option value="img2img_inpaint">Img2Img Inpainting</option>
+                                    <option value="template_pose">Template Pose</option>
+                                    <option value="prompt_only">Prompt Only (Fastest)</option>
+                                </select>
+                            </label>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="generateReference" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-text">Generate reference sheet first</span>
+                        </label>
+
+                        <div class="storyboard-controls" id="storyboardControls" style="display: none;">
+                            <div class="field-grid">
+                                <label class="field-select">
+                                    <span class="field-label">Storyboard Motion</span>
+                                    <select id="motionPreset" class="field-input">
+                                        <option value="auto">Auto (Recommended)</option>
+                                        <option value="heroic">Heroic Sweep</option>
+                                        <option value="mystic">Mystic Cast</option>
+                                        <option value="strike">Rapid Strike</option>
+                                        <option value="idle">Gentle Idle</option>
+                                    </select>
+                                </label>
+                                <label class="field-select">
+                                    <span class="field-label">Stage Pipeline</span>
+                                    <select id="motionPipelineMode" class="field-input">
+                                        <option value="disabled">Baseline (Templates)</option>
+                                        <option value="full">AnimateDiff + Inpaint + Warp</option>
+                                        <option value="draft">AnimateDiff Draft Only</option>
+                                    </select>
+                                </label>
+                            </div>
+                            <div class="toggles">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="usePrevSeedToggle">
+                                    <span class="toggle-slider"></span>
+                                    <span class="toggle-text">Reuse previous frame seed</span>
+                                </label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="referencePreviewToggle" checked>
+                                    <span class="toggle-slider"></span>
+                                    <span class="toggle-text">Show cached references</span>
+                                </label>
+                            </div>
+                            <p class="storyboard-hint">Storyboard pipeline generates five-frame vignettes with consistent motion and palette. Enable the full pipeline for the highest fidelity (requires AnimateDiff & IP-Adapter checkpoints).</p>
+                        </div>
+                    </section>
+
+                    <div class="assistant-cues" id="assistantCues">
+                        <h3>Assistant Cues</h3>
+                        <ul>
+                            <li>Tip: duplicate a key frame to create soft breathing motion.</li>
+                            <li>Reminder: keep characters centered for easy background swaps.</li>
+                            <li>Shortcut: press <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to generate.</li>
+                        </ul>
+                    </div>
+
+                    <div class="generate-actions">
+                    <button type="submit" class="generate-btn" id="generateBtn">
+                            <span class="btn-icon">➕</span>
+                        <span>Create</span>
+                    </button>
+                        <div class="progress-bar" id="progressBar" style="display: none;" role="status" aria-live="polite">
+                        <div class="progress-fill" id="progressFill"></div>
+                        <span class="progress-text" id="progressText">Preparing...</span>
+                        </div>
+                    </div>
+                </form>
+            </aside>
+
+            <section class="canvas-stage glass" id="canvasStage" aria-label="Light table stage" aria-live="polite">
+                <header class="stage-header">
+                    <div>
+                        <h2 class="stage-title">Light Table Stage</h2>
+                        <p class="stage-subtitle">Review frames, scrub the timeline, and experiment with overlays.</p>
+                    </div>
+                    <div class="stage-controls">
+                        <button class="stage-btn" id="gridToggle" aria-pressed="false">Grid</button>
+                        <button class="stage-btn" id="onionToggle" aria-pressed="false">Onion Skin</button>
+                        <button class="stage-btn" id="transparencyToggle" aria-pressed="false">Transparency</button>
+                        <div class="stage-zoom" role="group" aria-label="Zoom controls">
+                            <button class="stage-btn stage-btn--icon" id="zoomOutBtn" aria-label="Zoom out">–</button>
+                            <span class="stage-zoom__value" id="zoomLevelLabel">100%</span>
+                            <button class="stage-btn stage-btn--icon" id="zoomInBtn" aria-label="Zoom in">＋</button>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="stage-layers">
+                    <div class="stage-layer stage-background" id="stageBackground"></div>
+                    <div class="stage-layer stage-snow"></div>
+                    <div class="stage-layer stage-canvas">
+                        <canvas id="mainCanvas" width="512" height="512"></canvas>
+                        <div class="canvas-overlay" id="canvasOverlay">
+                            <svg class="canvas-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                            <p>Your creation appears here</p>
+                            <span class="canvas-hint">Use the timeline below or drop a sprite sheet to begin.</span>
+                        </div>
+                    </div>
+                    <div class="stage-layer stage-overlay"></div>
+                </div>
+
+                <div class="playback-controls" id="playbackControls" style="display: none;" aria-label="Playback controls">
+                    <div class="playback-cluster">
+                        <button class="control-btn control-btn--prev" id="prevFrameBtn" title="Previous frame" aria-label="Previous frame"></button>
+                        <button class="control-btn control-btn--play" id="playBtn" title="Play/Pause">◆</button>
+                        <button class="control-btn control-btn--next" id="nextFrameBtn" title="Next frame" aria-label="Next frame"></button>
+                    </div>
+                    <div class="timeline">
+                        <div class="timeline-header">
+                            <span id="frameLabel">Frame 1 / 1</span>
+                            <button class="loop-toggle" id="loopToggle">Loop</button>
+                        </div>
+                        <input type="range" id="frameSlider" min="0" max="0" value="0" class="timeline-slider">
+                    </div>
+                    <div class="fps-stack">
+                        <label>
+                            <span class="fps-label">FPS <span id="fpsLabel">12</span></span>
+                            <input type="range" id="fpsSlider" min="2" max="24" value="12" class="fps-slider" title="Animation speed">
+                        </label>
+                    </div>
+                </div>
+
+                <div class="filmstrip" id="stageFilmstrip" aria-label="Stage filmstrip">
+                    <h3>Filmstrip</h3>
+                    <div class="filmstrip__scroll" id="filmstripScroll"></div>
+                </div>
+            </section>
+
+            <aside class="sidebar archive-wall glass" aria-label="Archive Wall">
+                <div class="tabs">
+                    <button class="tab active" data-tab="gallery">
+                        <span>Gallery</span>
+                    </button>
+                    <button class="tab" data-tab="import">
+                        <span>Import</span>
+                    </button>
+                    <button class="tab" data-tab="advanced" title="Advanced Settings">
+                        <span>Advanced</span>
+                    </button>
+                    <button class="tab" data-tab="history">
+                        <span>History</span>
+                    </button>
+                </div>
+
+                <div class="tab-content active" id="galleryTab">
+                    <header class="panel-header">
+                        <div class="panel-heading">
+                            <h3>Studio Gallery</h3>
+                            <p>Recent renders, variants, and QA snapshots.</p>
+                        </div>
+                        <div class="panel-actions">
+                            <button class="icon-btn" id="openBackgroundGallery" title="Background gallery">◆</button>
+                            <button class="icon-btn" id="clearGalleryBtn" title="Clear gallery">◆</button>
+                        <button class="icon-btn" id="toggleExternalPreview" title="Cinematic reference">🎬</button>
+                            <button class="icon-btn" id="toggleViewBtn" title="Toggle view">◆</button>
+                        </div>
+                    </header>
+                    <div class="gallery" id="gallery" role="region" aria-label="Generated gallery"></div>
+                    <div class="filmstrip-view" id="filmstrip" style="display: none;"></div>
+                    <div class="qa-panel" id="qaPanel" role="region" aria-live="polite">
+                        <h4>Quality Checks</h4>
+                        <div class="qa-list" id="qaList"></div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="importTab">
+                    <header class="panel-header">
+                        <div class="panel-heading">
+                            <h3>Import Stage</h3>
+                            <p>Drop sprite sheets to animate or refine.</p>
+                    </div>
+                    </header>
+                    <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Upload sprite sheet">
+                        <input type="file" id="fileInput" accept="image/png" hidden>
+                        <div class="dropzone-visual">
+                            <span class="dropzone-icon">◆</span>
+                        <p class="dropzone-text">Drop sprite sheet</p>
+                            <span class="dropzone-hint">or click to browse files</span>
+                        </div>
+                    </div>
+                    <div class="import-options">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="uploadRemoveBg">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-text">Remove background</span>
+                        </label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="uploadExtract" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-text">Extract frames</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="advancedTab">
+                    <header class="panel-header">
+                        <div class="panel-heading">
+                            <h3>Advanced Lab</h3>
+                            <p>Fine-tune generation, background removal, and color palette.</p>
+                    </div>
+                    </header>
+                    <div class="advanced-settings">
+                        <div class="settings-section">
+                            <h4>Generation Settings</h4>
+                            <label class="setting-field">
+                                <span>Base Model</span>
+                                <select id="baseModel" class="field-input">
+                                    <option value="">Loading models...</option>
+                                </select>
+                            </label>
+                            <label class="setting-field">
+                                <span>CFG Scale (Guidance)</span>
+                                <input type="number" id="advCfgScale" class="field-input" min="1" max="20" step="0.5" value="7.0">
+                                <small>Higher values follow the prompt more strictly.</small>
+                            </label>
+                            <label class="setting-field">
+                                <span>Steps</span>
+                                <input type="number" id="advSteps" class="field-input" min="10" max="50" step="1" value="25">
+                                <small>More steps improve quality but take longer.</small>
+                            </label>
+                            <label class="setting-field">
+                                <span>Sampler</span>
+                                <select id="advSampler" class="field-input">
+                                    <option value="DPM++ 2M Karras">DPM++ 2M Karras</option>
+                                    <option value="Euler a">Euler a</option>
+                                    <option value="Euler">Euler</option>
+                                    <option value="DPM++ SDE Karras">DPM++ SDE Karras</option>
+                                    <option value="DDIM">DDIM</option>
+                                </select>
+                            </label>
+                        </div>
+
+        <div class="settings-section">
+            <h4>Background Removal</h4>
+            <label class="setting-field">
+                <span>Method</span>
+                <select id="bgRemovalMethod" class="field-input">
+                    <option value="rembg">Rembg (AI-based, recommended)</option>
+                    <option value="chromakey">Chromakey (Color-based)</option>
+                    <option value="transparent-background">Transparent Background (AI)</option>
+                </select>
+            </label>
+            <label class="setting-field">
+                <span>Rembg Aggressiveness</span>
+                <select id="rembgAggressiveness" class="field-input">
+                                    <option value="60">Conservative (60%)</option>
+                                    <option value="70">Moderate (70%)</option>
+                                    <option value="75" selected>Balanced (75%)</option>
+                                    <option value="80">Assertive (80%)</option>
+                                    <option value="90">Bold (90%)</option>
+                </select>
+            </label>
+            <label class="setting-field">
+                <span>Rembg Model</span>
+                <select id="rembgModel" class="field-input">
+                    <option value="u2net" selected>U2Net (General purpose)</option>
+                    <option value="u2netp">U2NetP (Lightweight)</option>
+                                    <option value="u2net_human_seg">U2Net Human</option>
+                    <option value="silueta">Silueta (Simple shapes)</option>
+                    <option value="isnet-general-use">ISNet (High quality)</option>
+                </select>
+            </label>
+            <label class="setting-field">
+                <span>Outline Preservation</span>
+                <select id="outlinePreservation" class="field-input">
+                    <option value="0">Disabled</option>
+                                    <option value="1">Light</option>
+                                    <option value="2">Moderate</option>
+                                    <option value="3" selected>Strong</option>
+                                    <option value="4">Very Strong</option>
+                                    <option value="5">Ultra</option>
+                </select>
+            </label>
+            <label class="setting-field">
+                <span>Pixel Art Scale</span>
+                <select id="pixelArtSize" class="field-input">
+                                    <option value="32">32×32 (Chunky)</option>
+                                    <option value="64" selected>64×64 (Balanced)</option>
+                                    <option value="128">128×128 (Detail)</option>
+                                    <option value="256">256×256 (Smooth)</option>
+                </select>
+            </label>
+            <label class="setting-field">
+                <span>Color Palette Size</span>
+                <input type="number" id="paletteSize" class="field-input" min="8" max="64" step="4" value="16">
+            </label>
+                            <label class="setting-field checkbox">
+                <input type="checkbox" id="forceChromakey" class="field-input">
+                                <span>Force chromakey for pixel art</span>
+                                <small>Skip AI removal and use color-based transparency.</small>
+            </label>
+        </div>
+
+                        <div class="settings-section">
+                            <h4>Prompt Templates</h4>
+                            <label class="setting-field">
+                                <span>Prompt Suffix</span>
+                                <textarea id="promptSuffix" class="field-input" rows="2" placeholder="high quality, sharp pixels, clean edges, vibrant colors"></textarea>
+                            </label>
+                            <label class="setting-field">
+                                <span>Default Negative</span>
+                                <textarea id="defaultNegative" class="field-input" rows="3" placeholder="blurry, low quality, jpeg artifacts, watermark, text, signature, realistic, photograph"></textarea>
+                            </label>
+                        </div>
+
+                        <div class="settings-actions">
+                            <button id="resetSettings" class="btn-secondary">Reset to Defaults</button>
+                            <button id="saveSettings" class="btn-primary">Save Settings</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="historyTab">
+                    <header class="panel-header">
+                        <div class="panel-heading">
+                            <h3>Project History</h3>
+                            <p>Replay jobs, revisit inspiration boards, and download assets.</p>
+                    </div>
+                        <button class="icon-btn" id="refreshHistory" title="Refresh history">↻</button>
+                    </header>
+                    <div class="history-list" id="historyList"></div>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <div class="background-modal hidden" id="backgroundModal" role="dialog" aria-modal="true" aria-labelledby="backgroundModalTitle">
+        <div class="background-modal__panel">
+            <button class="background-modal__close" id="backgroundModalClose" aria-label="Close">×</button>
+            <h2 id="backgroundModalTitle">Design a New Backdrop</h2>
+            <p>Describe your scene and let the studio generate a 2048×1024 background.</p>
+            <label class="note-field">
+                <span class="note-label">Backdrop Prompt</span>
+                <textarea id="backgroundPrompt" class="note-input" rows="3" placeholder="A small town covered in snow at sunset..."></textarea>
+            </label>
+            <div class="background-modal__actions">
+                <button class="btn-secondary" id="backgroundModalCancel">Cancel</button>
+                <button class="btn-primary" id="backgroundModalCreate">Generate Background</button>
+            </div>
+            <div class="background-modal__status" id="backgroundModalStatus"></div>
+        </div>
+    </div>
+
+    <aside class="background-gallery hidden" id="backgroundGallery" aria-label="Background gallery">
+        <div class="background-gallery__header">
+            <h2>Background Library</h2>
+            <button class="background-gallery__close" id="backgroundGalleryClose" aria-label="Close background gallery">×</button>
+        </div>
+        <div class="background-gallery__controls">
+            <button class="hero-btn" id="resetBackgroundBtn">Reset to Default</button>
+        </div>
+        <div class="background-gallery__list" id="backgroundGalleryList" role="list"></div>
+    </aside>
+
+    <div class="accessibility-panel hidden" id="accessibilityPanel" role="dialog" aria-modal="true" aria-labelledby="accessibilityTitle">
+        <div class="accessibility-panel__content" tabindex="-1">
+            <button class="accessibility-panel__close" id="accessibilityClose" aria-label="Close accessibility settings">×</button>
+            <h2 id="accessibilityTitle">Accessibility Settings</h2>
+            <p>Adjust studio comfort options to suit your needs.</p>
+            <label class="toggle-switch">
+                <input type="checkbox" id="largeTextToggle">
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">Larger text and spacing</span>
+            </label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="reduceMotionToggle">
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">Reduce motion and snowfall</span>
+            </label>
+        </div>
+    </div>
+
+    <script src="/frontend/prompts.js"></script>
+    <script src="/frontend/advanced-settings.js"></script>
+    <script src="/frontend/app.js"></script>
+</body>
+</html>

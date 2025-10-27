@@ -1,0 +1,21 @@
+{
+  "name": "pixel-sprite-generator",
+  "version": "1.0.0",
+  "description": "Local pixel art sprite generator using Stable Diffusion",
+  "scripts": {
+    "setup": "python scripts/quick_start.py",
+    "start": "cd backend && python api.py",
+    "frontend": "cd frontend && python -m http.server 8080",
+    "dev": "npm run start & npm run frontend"
+  },
+  "keywords": [
+    "pixel-art",
+    "sprite",
+    "game-dev",
+    "stable-diffusion",
+    "generator"
+  ],
+  "author": "",
+  "license": "MIT"
+}
+

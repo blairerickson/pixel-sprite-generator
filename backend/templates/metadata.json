@@ -1,0 +1,212 @@
+{
+  "idle_4dir": {
+    "animation_type": "idle",
+    "direction_count": 4,
+    "frame_count": 2,
+    "keyframes": [
+      0,
+      1
+    ],
+    "loop": true,
+    "breathing_effect": true,
+    "template_files": {}
+  },
+  "idle_8dir": {
+    "animation_type": "idle",
+    "direction_count": 8,
+    "frame_count": 2,
+    "keyframes": [
+      0,
+      1
+    ],
+    "loop": true,
+    "breathing_effect": true,
+    "template_files": {}
+  },
+  "walk_4dir": {
+    "animation_type": "walk",
+    "direction_count": 4,
+    "frame_count": 8,
+    "keyframes": [
+      0,
+      2,
+      4,
+      6,
+      7
+    ],
+    "loop": true,
+    "breathing_effect": false,
+    "template_files": {}
+  },
+  "walk_8dir": {
+    "animation_type": "walk",
+    "direction_count": 8,
+    "frame_count": 8,
+    "keyframes": [
+      0,
+      2,
+      4,
+      6,
+      7
+    ],
+    "loop": true,
+    "breathing_effect": false,
+    "template_files": {}
+  },
+  "run_4dir": {
+    "animation_type": "run",
+    "direction_count": 4,
+    "frame_count": 8,
+    "keyframes": [
+      0,
+      2,
+      4,
+      6,
+      7
+    ],
+    "loop": true,
+    "breathing_effect": false,
+    "template_files": {}
+  },
+  "run_8dir": {
+    "animation_type": "run",
+    "direction_count": 8,
+    "frame_count": 8,
+    "keyframes": [
+      0,
+      2,
+      4,
+      6,
+      7
+    ],
+    "loop": true,
+    "breathing_effect": false,
+    "template_files": {}
+  },
+  "attack_4dir": {
+    "animation_type": "attack",
+    "direction_count": 4,
+    "frame_count": 6,
+    "keyframes": [
+      0,
+      1,
+      3,
+      4,
+      5
+    ],
+    "loop": false,
+    "breathing_effect": false,
+    "template_files": {}
+  },
+  "attack_8dir": {
+    "animation_type": "attack",
+    "direction_count": 8,
+    "frame_count": 6,
+    "keyframes": [
+      0,
+      1,
+      3,
+      4,
+      5
+    ],
+    "loop": false,
+    "breathing_effect": false,
+    "template_files": {}
+  },
+  "storyboard_4dir": {
+    "animation_type": "storyboard",
+    "direction_count": 4,
+    "frame_count": 5,
+    "keyframes": [
+      0,
+      2,
+      4
+    ],
+    "loop": false,
+    "breathing_effect": false,
+    "template_files": {},
+    "motion_profile": "storyboard_v1",
+    "notes": [
+      "Designed for 5-frame vignettes (setup, anticipation, action, impact, settle)",
+      "Pairs with storyboard motion descriptors in config"
+    ]
+  },
+  "storyboard_8dir": {
+    "animation_type": "storyboard",
+    "direction_count": 8,
+    "frame_count": 5,
+    "keyframes": [
+      0,
+      2,
+      4
+    ],
+    "loop": false,
+    "breathing_effect": false,
+    "template_files": {},
+    "motion_profile": "storyboard_v1",
+    "notes": [
+      "Designed for 5-frame vignettes (setup, anticipation, action, impact, settle)",
+      "Pairs with storyboard motion descriptors in config"
+    ]
+  },
+  "cast_spell_4dir": {
+    "animation_type": "cast_spell",
+    "direction_count": 4,
+    "frame_count": 8,
+    "keyframes": [
+      0,
+      2,
+      4,
+      6,
+      7
+    ],
+    "loop": false,
+    "breathing_effect": false,
+    "template_files": {}
+  },
+  "cast_spell_8dir": {
+    "animation_type": "cast_spell",
+    "direction_count": 8,
+    "frame_count": 8,
+    "keyframes": [
+      0,
+      2,
+      4,
+      6,
+      7
+    ],
+    "loop": false,
+    "breathing_effect": false,
+    "template_files": {}
+  },
+  "death_4dir": {
+    "animation_type": "death",
+    "direction_count": 4,
+    "frame_count": 6,
+    "keyframes": [
+      0,
+      1,
+      3,
+      4,
+      5
+    ],
+    "loop": false,
+    "breathing_effect": false,
+    "template_files": {}
+  },
+  "death_8dir": {
+    "animation_type": "death",
+    "direction_count": 8,
+    "frame_count": 6,
+    "keyframes": [
+      0,
+      1,
+      3,
+      4,
+      5
+    ],
+    "loop": false,
+    "breathing_effect": false,
+    "template_files": {}
+  }
+}

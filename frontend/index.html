@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pearl Pixel Salon</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;500;600;700&family=Grandstander:wght@600;700&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/frontend/style.css">
+</head>
+<body>
+    <div class="background-stage" id="backgroundStage" aria-hidden="true">
+        <img src="/assets/background.png" alt="Studio backdrop" id="backgroundImage">
+        <div class="background-gradient"></div>
+    </div>
+
+    <div class="pixel-snowflakes"></div>
+    
+    <div class="app-container">
+        <main class="studio" role="main">
+            <!-- LEFT: Gallery Panel -->
+            <aside class="studio-gallery gallery-panel" aria-label="Gallery">
+                <div class="gallery-panel-header">
+                    <h1 class="gallery-title">Pearl Pixel Salon</h1>
+                    <div class="gallery-header-actions">
+                        <div class="compact-status" id="statusBadge" role="status" aria-live="polite">
+                            <svg class="status-pulse" width="8" height="8">
+                                <circle cx="4" cy="4" r="3" />
+                            </svg>
+                            <span id="statusText">Ready</span>
+                        </div>
+                    <button class="compact-btn" id="newBackgroundBtn" title="New Backdrop" hidden>🎨</button>
+                    </div>
+                </div>
+                <!-- Horizontal options ribbon (hidden by default) -->
+                <div class="options-ribbon" id="optionsRibbon" style="display:none" aria-label="Advanced options ribbon">
+                    <div class="ribbon-group">
+                        <label>Style
+                            <select id="ribbonStyle"></select>
+                        </label>
+                    </div>
+                    <div class="ribbon-group">
+                        <label>Seed
+                            <input id="ribbonSeed" type="number" step="1" placeholder="-1" />
+                        </label>
+                    </div>
+                    <div class="ribbon-group">
+                        <label>Variations
+                            <input id="ribbonVars" type="number" min="1" max="4" value="1" />
+                        </label>
+                    </div>
+                </div>
+                <div class="gallery-scroll">
+                    <div class="gallery" id="gallery" role="region" aria-label="Generated gallery"></div>
+                </div>
+                
+                <!-- Hidden panels (modals for import, history, QA) -->
+                <!-- Quality Checks temporarily hidden (feature preserved, UI disabled) -->
+                <div class="qa-panel" id="qaPanel" role="region" aria-live="polite" style="display: none !important;"></div>
+            </aside>
+
+            <!-- CENTER: Teleporter Stage -->
+            <section class="studio-center" aria-label="Sprite Stage">
+                <div class="teleporter-stage">
+                    <div class="teleporter-platform"></div>
+                    <div class="teleporter-rings">
+                        <div class="teleporter-ring"></div>
+                        <div class="teleporter-ring"></div>
+                        <div class="teleporter-ring"></div>
+                    </div>
+                    <div class="teleporter-canvas-wrapper" id="canvasStage">
+                        <canvas id="mainCanvas" width="512" height="512"></canvas>
+                        <div class="canvas-overlay" id="canvasOverlay">
+                            <svg class="canvas-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Playback Controls (when animation loaded) -->
+                <div class="playback-controls" id="playbackControls" style="display: none;" aria-label="Playback controls">
+                    <div class="playback-cluster">
+                        <button class="control-btn control-btn--prev" id="prevFrameBtn" title="Previous frame" aria-label="Previous frame"></button>
+                        <button class="control-btn control-btn--play" id="playBtn" title="Play/Pause">◆</button>
+                        <button class="control-btn control-btn--next" id="nextFrameBtn" title="Next frame" aria-label="Next frame"></button>
+                    </div>
+                    <div class="timeline">
+                        <div class="timeline-header">
+                            <span id="frameLabel">Frame 1 / 1</span>
+                            <button class="loop-toggle" id="loopToggle">Loop</button>
+                        </div>
+                        <input type="range" id="frameSlider" min="0" max="0" value="0" class="timeline-slider">
+                    </div>
+                    <div class="fps-stack">
+                        <label>
+                            <span class="fps-label">FPS <span id="fpsLabel">12</span></span>
+                            <input type="range" id="fpsSlider" min="2" max="24" value="12" class="fps-slider" title="Animation speed">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Stage Controls -->
+                <div class="stage-controls">
+                    <button class="stage-btn active" id="clearModeBtn" aria-pressed="true" data-mode="clear">Clear</button>
+                    <button class="stage-btn" id="gridToggle" aria-pressed="false" data-mode="grid">Grid</button>
+                    <button class="stage-btn" id="paperModeBtn" aria-pressed="false" data-mode="paper">Paper</button>
+                    <div class="stage-zoom" role="group" aria-label="Zoom controls">
+                        <button class="stage-btn stage-btn--icon" id="zoomOutBtn" aria-label="Zoom out">–</button>
+                        <span class="stage-zoom__value" id="zoomLevelLabel">100%</span>
+                        <button class="stage-btn stage-btn--icon" id="zoomInBtn" aria-label="Zoom in">＋</button>
+                    </div>
+                </div>
+                
+                <!-- Hidden advanced toggles -->
+                <div style="display: none;">
+                    <button id="onionToggle"></button>
+                    <button id="transparencyToggle"></button>
+                </div>
+
+                <!-- Filmstrip (below stage) -->
+                <div class="filmstrip" id="stageFilmstrip" aria-label="Stage filmstrip">
+                    <h3>Filmstrip</h3>
+                    <div class="filmstrip__scroll" id="filmstripScroll"></div>
+                </div>
+            </section>
+
+            <!-- RIGHT: Prompt Notepad -->
+            <aside class="studio-prompt notepad-sheet" aria-label="Creation Notepad">
+                <form id="generateForm" class="compose-form">
+                    <!-- Mode Selector -->
+                    <nav class="mode-selector" aria-label="Mode presets">
+                        <button type="button" class="mode-pill active" data-mode="character">
+                            <span class="mode-pill__label">Character</span>
+                        </button>
+                        <button type="button" class="mode-pill" data-mode="alive">
+                            <span class="mode-pill__label">Alive!</span>
+                        </button>
+                        <button type="button" class="mode-pill" data-mode="background">
+                            <span class="mode-pill__label">Background</span>
+                        </button>
+                        <input type="hidden" id="preset" value="character_sprite">
+                    </nav>
+
+                    <!-- Prompt Field with dice icon -->
+                    <div class="prompt-field-container">
+                        <label class="note-field">
+                            <textarea id="prompt" class="note-input" rows="5" required placeholder="A brave knight..."></textarea>
+                        </label>
+                        <button type="button" class="prompt-dice-icon" onclick="refreshRandomPrompt()" title="Random Prompt">🎲</button>
+                    </div>
+
+                    <!-- CREATE Button (directly under prompt) -->
+                    <button type="submit" class="generate-btn generate-btn--primary" id="generateBtn">
+                        <span class="btn-icon">✨</span>
+                        <span class="btn-label" data-idle="Create" data-loading="Generating…">Create</span>
+                    </button>
+                    
+                    <!-- Progress Bar -->
+                    <div class="progress-bar" id="progressBar" style="display: none;" role="status" aria-live="polite">
+                        <div class="progress-fill" id="progressFill"></div>
+                        <span class="progress-text" id="progressText">Preparing...</span>
+                    </div>
+
+                    <!-- Collapsible Advanced Options (now below CREATE) -->
+                    <details class="compact-field-group options-panel">
+                        <summary>⚙ Options</summary>
+
+                        <label class="note-field note-field--compact">
+                            <span class="note-label">Avoid</span>
+                            <textarea id="negativePrompt" class="note-input" rows="2" placeholder="blurry, realistic, low detail..."></textarea>
+                        </label>
+
+                        <label class="field-select">
+                            <span class="field-label">Style Library</span>
+                            <select id="lora" class="field-input">
+                                <option value="">Style: Base model</option>
+                            </select>
+                        </label>
+
+                        <div class="field-grid field-grid--advanced">
+                            <label class="field-compact">
+                                <span class="field-label">Width</span>
+                                <input type="number" id="width" class="field-input-sm" placeholder="512">
+                            </label>
+                            <label class="field-compact">
+                                <span class="field-label">Height</span>
+                                <input type="number" id="height" class="field-input-sm" placeholder="512">
+                            </label>
+                            <label class="field-compact">
+                                <span class="field-label">Variations</span>
+                                <input type="number" id="batchSize" class="field-input-sm" value="1" min="1" max="4">
+                            </label>
+                            <label class="field-compact">
+                                <span class="field-label">Seed</span>
+                                <input type="number" id="seed" class="field-input-sm" value="-1">
+                            </label>
+                            <label class="field-compact">
+                                <span class="field-label">CFG Scale</span>
+                                <input type="number" step="0.5" id="advCfgScale" class="field-input-sm" value="7">
+                            </label>
+                            <label class="field-compact">
+                                <span class="field-label">Steps</span>
+                                <input type="number" id="advSteps" class="field-input-sm" value="25">
+                            </label>
+                            <label class="field-compact">
+                                <span class="field-label">Sampler</span>
+                                <select id="advSampler" class="field-input-sm">
+                                    <option value="DPM++ 2M Karras">DPM++ 2M Karras</option>
+                                    <option value="Euler a">Euler a</option>
+                                    <option value="UniPC">UniPC</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <div class="toggles">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="removeBackground">
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-text">Remove BG</span>
+                            </label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="extractSprites" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-text">Extract</span>
+                            </label>
+                        </div>
+
+                        <div class="options-subsection">
+                            <h4 class="options-heading">🧪 Generation Controls</h4>
+                            <div class="field-grid field-grid--advanced">
+                                <label class="field-compact">
+                                    <span class="field-label">BG Method</span>
+                                    <select id="bgRemovalMethod" class="field-input-sm">
+                                        <option value="rembg">Rembg</option>
+                                        <option value="transparent">Transparent</option>
+                                        <option value="alphamatte">Alpha Matte</option>
+                                    </select>
+                                </label>
+                                <label class="field-compact">
+                                    <span class="field-label">RMBG Strength</span>
+                                    <input type="number" id="rembgAggressiveness" class="field-input-sm" value="75" min="0" max="100">
+                                </label>
+                                <label class="field-compact">
+                                    <span class="field-label">RMBG Model</span>
+                                    <select id="rembgModel" class="field-input-sm">
+                                        <option value="u2net">u2net</option>
+                                        <option value="u2netp">u2netp</option>
+                                        <option value="isnet-general-use">isnet-general-use</option>
+                                    </select>
+                                </label>
+                                <label class="field-compact">
+                                    <span class="field-label">Outline</span>
+                                    <input type="number" id="outlinePreservation" class="field-input-sm" value="3" min="0" max="10">
+                                </label>
+                                <label class="field-compact">
+                                    <span class="field-label">Pixel Size</span>
+                                    <input type="number" id="pixelArtSize" class="field-input-sm" value="64" min="16" max="256">
+                                </label>
+                                <label class="field-compact">
+                                    <span class="field-label">Palette</span>
+                                    <input type="number" id="paletteSize" class="field-input-sm" value="16" min="4" max="64">
+                                </label>
+                            </div>
+                            <div class="advanced-options-row">
+                                <label class="toggle-switch toggle-switch--clean">
+                                    <input type="checkbox" id="forceChromakey">
+                                    <span class="toggle-slider"></span>
+                                    <span class="toggle-text">Force chroma-key</span>
+                                </label>
+                                <label class="field-select field-select--compact">
+                                    <span class="field-label">Prompt suffix</span>
+                                    <input type="text" id="promptSuffix" class="field-input" placeholder="high quality, sharp pixels...">
+                                </label>
+                                <label class="field-select field-select--compact">
+                                    <span class="field-label">Default negative</span>
+                                    <textarea id="defaultNegative" class="note-input" rows="2"></textarea>
+                                </label>
+                            </div>
+                            <div class="advanced-buttons">
+                                <button type="button" class="btn-secondary" id="resetSettings">Reset</button>
+                                <button type="button" class="btn-primary" id="saveSettings">Save</button>
+                            </div>
+                        </div>
+                    </details>
+
+                    <!-- Animation Controls (shown when needed) -->
+                    <section class="animation-tab" id="animationTab" hidden>
+                        <header class="tab-header">
+                            <h3>🎬 Animation</h3>
+                            <p>Create full walk cycles and custom actions.</p>
+                        </header>
+                        <div class="tab-grid">
+                            <label class="field-select field-select--clean">
+                                <span class="field-label">Motion</span>
+                                <select id="animationType" class="field-input">
+                                    <option value="idle">Idle</option>
+                                    <option value="walk">Walk</option>
+                                    <option value="run">Run</option>
+                                    <option value="attack">Attack</option>
+                                    <option value="cast_spell">Cast Spell</option>
+                                    <option value="death">Death</option>
+                                    <option value="jump">Jump</option>
+                                    <option value="crouch">Crouch</option>
+                                    <option value="hurt">Hurt</option>
+                                </select>
+                            </label>
+                            <label class="field-select field-select--clean">
+                                <span class="field-label">Directions</span>
+                                <select id="directions" class="field-input">
+                                    <option value="4dir">4-Way</option>
+                                    <option value="8dir">8-Way</option>
+                                </select>
+                            </label>
+                            <label class="field-select field-select--clean">
+                                <span class="field-label">Guidance</span>
+                                <select id="guidanceMethod" class="field-input">
+                                    <option value="auto">Auto</option>
+                                    <option value="controlnet">ControlNet</option>
+                                    <option value="template_pose">Template</option>
+                                    <option value="prompt_only">Prompt</option>
+                                </select>
+                            </label>
+                            <label class="field-select field-select--clean">
+                                <span class="field-label">Custom Action</span>
+                                <select id="customAction" class="field-input">
+                                    <option value="">None</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div class="field-slider">
+                            <label for="frameCount" class="field-label">Frames <span id="frameCountLabel">8</span></label>
+                            <input type="range" id="frameCount" min="4" max="32" value="8">
+                        </div>
+                        <label class="toggle-switch toggle-switch--clean">
+                            <input type="checkbox" id="generateReference" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-text">Generate reference first</span>
+                        </label>
+                    </section>
+                </form>
+            </aside>
+        </main>
+                </div>
+
+    <!-- Gallery Viewer Modal -->
+    <div id="galleryViewer" class="gallery-viewer hidden" role="dialog" aria-modal="true">
+        <div class="gallery-viewer__backdrop"></div>
+        <div class="gallery-viewer__content">
+            <button class="gallery-viewer__close" id="galleryViewerClose" aria-label="Close">×</button>
+            <div class="gallery-viewer__main">
+                <img id="galleryViewerImage" class="gallery-viewer__image" alt="Preview">
+                <div id="galleryViewerMeta" class="gallery-viewer__meta"></div>
+                    </div>
+            <div id="galleryViewerVariants" class="gallery-viewer__variants"></div>
+            <div id="galleryViewerFilmstrip" class="gallery-viewer__filmstrip"></div>
+            <div class="gallery-viewer__controls">
+                <button id="galleryViewerPrev" class="gallery-viewer__nav">‹</button>
+                <span id="galleryViewerCounter" class="gallery-viewer__counter">1 / 1</span>
+                <button id="galleryViewerNext" class="gallery-viewer__nav">›</button>
+                <button id="galleryViewerPlay" class="gallery-viewer__play">Play</button>
+                <input type="range" id="galleryViewerFps" min="2" max="24" value="12" class="gallery-viewer__fps">
+                <span id="galleryViewerFpsValue" class="gallery-viewer__fps-value">12 FPS</span>
+                <div class="gallery-viewer__zoom" id="galleryViewerZoomButtons">
+                    <button class="gallery-viewer__zoom-btn" data-zoom-level="1">1×</button>
+                    <button class="gallery-viewer__zoom-btn" data-zoom-level="2">2×</button>
+                    <button class="gallery-viewer__zoom-btn active" data-zoom-level="4">4×</button>
+                    <button class="gallery-viewer__zoom-btn" data-zoom-level="8">8×</button>
+                </div>
+                        </div>
+                    </div>
+                </div>
+
+    <!-- Hidden form elements -->
+                        <input type="file" id="fileInput" accept="image/png" hidden>
+    
+    <!-- Placeholder elements for advanced settings -->
+    <div style="display: none;">
+        <input id="uploadRemoveBg" type="checkbox">
+        <input id="uploadExtract" type="checkbox">
+        <div id="dropzone"></div>
+        <div id="filmstrip"></div>
+        <div id="historyList"></div>
+        <input id="baseModel">
+        <input id="advCfgScale">
+        <input id="advSteps">
+        <input id="advSampler">
+        <input id="bgRemovalMethod">
+        <input id="rembgAggressiveness">
+        <input id="rembgModel">
+        <input id="outlinePreservation">
+        <input id="pixelArtSize">
+        <input id="paletteSize">
+        <input id="forceChromakey">
+        <input id="promptSuffix">
+        <input id="defaultNegative">
+        <button id="saveSettings"></button>
+        <button id="resetSettings"></button>
+        <button id="refreshHistory"></button>
+        <button id="clearGalleryBtn"></button>
+        <button id="toggleViewBtn"></button>
+        <button id="toggleExternalPreview"></button>
+    </div>
+
+    <!-- Background Modal -->
+    <div class="background-modal hidden" id="backgroundModal" role="dialog" aria-modal="true">
+        <div class="background-modal__panel">
+            <button class="background-modal__close" id="backgroundModalClose" aria-label="Close">×</button>
+            <h2>Design a New Backdrop</h2>
+            <p>Describe your scene and let the studio generate a 2048×1024 background.</p>
+            <label class="note-field">
+                <span class="note-label">Backdrop Prompt</span>
+                <textarea id="backgroundPrompt" class="note-input" rows="3" placeholder="A small town covered in snow at sunset..."></textarea>
+            </label>
+            <div class="background-modal__actions">
+                <button class="btn-secondary" id="backgroundModalCancel">Cancel</button>
+                <button class="btn-primary" id="backgroundModalCreate">Generate Background</button>
+            </div>
+            <div class="background-modal__status" id="backgroundModalStatus"></div>
+        </div>
+    </div>
+
+    <!-- Background Gallery Drawer -->
+    <aside class="background-gallery hidden" id="backgroundGallery" aria-label="Background gallery">
+        <div class="background-gallery__header">
+            <h2>Background Library</h2>
+            <button class="background-gallery__close" id="backgroundGalleryClose" aria-label="Close">×</button>
+        </div>
+        <div class="background-gallery__controls">
+            <button class="hero-btn" id="resetBackgroundBtn">Reset to Default</button>
+            <button class="hero-btn" id="openBackgroundGallery">Open Gallery</button>
+        </div>
+        <div class="background-gallery__list" id="backgroundGalleryList" role="list"></div>
+    </aside>
+
+    <!-- Accessibility Panel -->
+    <div class="accessibility-panel hidden" id="accessibilityPanel" role="dialog" aria-modal="true">
+        <div class="accessibility-panel__content" tabindex="-1">
+            <button class="accessibility-panel__close" id="accessibilityClose" aria-label="Close">×</button>
+            <h2>Accessibility Settings</h2>
+            <p>Adjust studio comfort options to suit your needs.</p>
+            <label class="toggle-switch">
+                <input type="checkbox" id="largeTextToggle">
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">Larger text and spacing</span>
+            </label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="reduceMotionToggle">
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">Reduce motion and snowfall</span>
+            </label>
+        </div>
+    </div>
+
+    <script src="/frontend/prompts.js"></script>
+    <script src="/frontend/advanced-settings.js"></script>
+    <script src="/frontend/app.js"></script>
+</body>
+</html>
+
