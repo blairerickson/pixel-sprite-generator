@@ -171,6 +171,7 @@ class GenerateRequest(BaseModel):
     prompt: str = Field(..., description="Main prompt for generation")
     negative_prompt: Optional[str] = Field(None, description="Negative prompt")
     preset: Optional[str] = Field("character_sprite", description="Preset name")
+    base_model: Optional[str] = Field(None, description="Base model to use")
     lora: Optional[str] = Field(None, description="LoRA name to use")
     lora_weight: Optional[float] = Field(None, description="LoRA weight")
     width: Optional[int] = Field(None, description="Image width")
@@ -320,6 +321,7 @@ async def process_generation(job_id: str, request: GenerateRequest):
             prompt=request.prompt,
             negative_prompt=request.negative_prompt,
             preset=request.preset,
+            base_model=request.base_model,
             lora=request.lora,
             lora_weight=request.lora_weight,
             width=request.width,
@@ -984,6 +986,7 @@ async def process_alive_sequence_generation(job_id: str, request: AliveSequenceR
             prompt=request.prompt,
             negative_prompt=request.negative_prompt,
             preset=request.preset,
+            base_model=request.base_model,
             lora=request.lora,
             width=request.width,
             height=request.height,

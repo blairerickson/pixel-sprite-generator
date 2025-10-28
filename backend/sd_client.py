@@ -140,8 +140,29 @@ class SDClient:
         except:
             return False
     
+    async def _switch_model_a1111(self, model_name: str):
+        """Switch the active model in A1111"""
+        try:
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None,
+                lambda: requests.post(
+                    f"{self.api_url}/sdapi/v1/options",
+                    json={"sd_model_checkpoint": model_name},
+                    timeout=10
+                )
+            )
+            if response.status_code != 200:
+                print(f"Warning: Failed to switch model to {model_name}: {response.text}")
+        except Exception as e:
+            print(f"Warning: Error switching model to {model_name}: {e}")
+    
     async def _generate_a1111(self, params: GenerationParams) -> Dict[str, Any]:
         """Generate using Automatic1111 API"""
+        
+        # Switch model if specified
+        if params.base_model:
+            await self._switch_model_a1111(params.base_model)
         
         # Get preset settings
         preset_config = None

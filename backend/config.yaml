@@ -7,10 +7,11 @@ sd:
   
   # Model paths (relative to SD models folder)
   models:
-    base_model: "illustriousXL_v01.safetensors"
+    base_model: "pixelArtDiffusionXL_spriteShaper.safetensors"
     alternative_models:
-      - "noobai-XL-Vpred05.safetensors"
-      - "anythingV4.5.safetensors"
+      - "illustriousXL_v01.safetensors"
+      - "allInOnePixelModel_v1.ckpt"
+      - "v1-5-pruned-emaonly.safetensors"
   
   loras:
     - name: "pixel_character_sprite_illustrious"

@@ -173,6 +173,13 @@
                         </label>
 
                         <label class="field-select">
+                            <span class="field-label">Base Model</span>
+                            <select id="baseModel" class="field-input">
+                                <option value="pixelArtDiffusionXL_spriteShaper.safetensors">PearlPixels</option>
+                            </select>
+                        </label>
+
+                        <label class="field-select">
                             <span class="field-label">Style Library</span>
                             <select id="lora" class="field-input">
                                 <option value="">Style: Base model</option>
@@ -382,7 +389,6 @@
         <div id="dropzone"></div>
         <div id="filmstrip"></div>
         <div id="historyList"></div>
-        <input id="baseModel">
         <input id="advCfgScale">
         <input id="advSteps">
         <input id="advSampler">

@@ -172,6 +172,7 @@ function cacheElements() {
     el.form = document.getElementById('generateForm');
     el.prompt = document.getElementById('prompt');
     el.negative = document.getElementById('negativePrompt');
+    el.baseModel = document.getElementById('baseModel');
     el.lora = document.getElementById('lora');
     el.width = document.getElementById('width');
     el.height = document.getElementById('height');
@@ -511,6 +512,7 @@ async function handleGenerate(e) {
             guidance_method: el.guidanceMethod.value,
             frame_count: null, // Auto
             generate_reference_first: el.generateReference.checked,
+            base_model: el.baseModel?.value || null,
             style_lora: el.lora.value || null,
             lora_weight: null,
             width: parseInt(el.width.value) || null,
@@ -529,6 +531,7 @@ async function handleGenerate(e) {
             prompt: el.prompt.value,
             negative_prompt: el.negative.value || null,
             preset: el.preset.value,
+            base_model: el.baseModel?.value || null,
             lora: el.lora.value || null,
             width: parseInt(el.width.value) || null,
             height: parseInt(el.height.value) || null,
@@ -544,6 +547,7 @@ async function handleGenerate(e) {
             prompt: el.prompt.value,
             negative_prompt: el.negative.value || null,
             preset: el.preset.value,
+            base_model: el.baseModel?.value || null,
             lora: el.lora.value || null,
             width: parseInt(el.width.value) || null,
             height: parseInt(el.height.value) || null,
@@ -1779,6 +1783,33 @@ async function loadModels() {
         const response = await fetch(`${API_BASE}/models`);
         const data = await response.json();
         
+        // Populate base model dropdown
+        if (el.baseModel) {
+            el.baseModel.innerHTML = '';
+            
+            // Add all available SD models
+            if (data.available_sd_models && data.available_sd_models.length > 0) {
+                data.available_sd_models.forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model;
+                    
+                    // Create friendly display name
+                    let displayName = model.replace(/\.(safetensors|ckpt)$/, '');
+                    displayName = displayName.replace(/_/g, ' ');
+                    
+                    // Special label for default model
+                    if (model === 'pixelArtDiffusionXL_spriteShaper.safetensors') {
+                        displayName = 'PearlPixels';
+                        option.setAttribute('selected', 'true');
+                    }
+                    
+                    option.textContent = displayName;
+                    el.baseModel.appendChild(option);
+                });
+            }
+        }
+        
+        // Populate LoRA dropdown
         if (el.lora) {
             el.lora.innerHTML = '<option value="">Style: Base model</option>';
             (data.loras || []).forEach(lora => {
