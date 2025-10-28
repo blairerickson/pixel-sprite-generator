@@ -14,8 +14,8 @@ const AdvancedSettings = {
         pixelArtSize: 64,
         paletteSize: 16,
         forceChromakey: false,
-        promptSuffix: 'high quality, sharp pixels, clean edges, vibrant colors',
-        defaultNegative: 'blurry, low quality, jpeg artifacts, watermark, text, signature, realistic, photograph'
+        promptSuffix: '(((SPRITE, CLEAR BACKGROUND, BLACK OUTLINE))) high quality sprite, sharp pixels, clean edges, vibrant colors',
+        defaultNegative: '(((BACKGROUND DETAIL, BACKGROUND SCENERY, BACKGROUND OBJECTS))) blurry, low quality, jpeg artifacts, watermark, text, signature, realistic, photograph'
     },
 
     init() {

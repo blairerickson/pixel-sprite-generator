@@ -1790,26 +1790,12 @@ async function loadModels() {
         if (el.baseModel) {
             el.baseModel.innerHTML = '';
             
-            // Add all available SD models
-            if (data.available_sd_models && data.available_sd_models.length > 0) {
-                data.available_sd_models.forEach(model => {
-                    const option = document.createElement('option');
-                    option.value = model;
-                    
-                    // Create friendly display name
-                    let displayName = model.replace(/\.(safetensors|ckpt)$/, '');
-                    displayName = displayName.replace(/_/g, ' ');
-                    
-                    // Special label for default model
-                    if (model === 'pixelArtDiffusionXL_spriteShaper.safetensors') {
-                        displayName = 'PearlPixels';
-                        option.setAttribute('selected', 'true');
-                    }
-                    
-                    option.textContent = displayName;
-                    el.baseModel.appendChild(option);
-                });
-            }
+            // Add only the default PearlPixels model
+            const option = document.createElement('option');
+            option.value = 'pixelArtDiffusionXL_spriteShaper.safetensors';
+            option.textContent = 'PearlPixels';
+            option.setAttribute('selected', 'true');
+            el.baseModel.appendChild(option);
         }
         
         // Populate LoRA dropdown
@@ -1818,7 +1804,9 @@ async function loadModels() {
             (data.loras || []).forEach(lora => {
                 const option = document.createElement('option');
                 option.value = lora.name;
-                option.textContent = `Style: ${lora.name.replace(/_/g, ' ')}`;
+                const displayName = lora.name.replace(/_/g, ' ');
+                const description = lora.description ? ` - ${lora.description}` : '';
+                option.textContent = `Style: ${displayName}${description}`;
                 el.lora.appendChild(option);
             });
         }

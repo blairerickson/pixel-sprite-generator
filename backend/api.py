@@ -255,7 +255,8 @@ async def list_models():
             {
                 "name": lora['name'],
                 "triggers": lora['triggers'],
-                "default_weight": lora['default_weight']
+                "default_weight": lora['default_weight'],
+                "description": lora.get('description', '')
             }
             for lora in config['sd']['loras']
         ]

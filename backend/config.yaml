@@ -8,31 +8,31 @@ sd:
   # Model paths (relative to SD models folder)
   models:
     base_model: "pixelArtDiffusionXL_spriteShaper.safetensors"
-    alternative_models:
-      - "illustriousXL_v01.safetensors"
-      - "allInOnePixelModel_v1.ckpt"
-      - "v1-5-pruned-emaonly.safetensors"
+    alternative_models: []
   
   loras:
     - name: "pixel_character_sprite_illustrious"
       path: "pixel_character_sprite_illustrious.safetensors"
       default_weight: 0.7
       triggers: ["pixel_character_sprite", "sprite sheet", "pixel art"]
+      description: "Character-focused pixel art with clean sprite aesthetics"
     
     - name: "2d_pixel_toolkit"
       path: "2DPixelToolkit.safetensors"
       default_weight: 1.0
       triggers: ["pixel", "pixel art", "pixelart"]
+      description: "General pixel art toolkit for various styles and subjects"
     
     - name: "ragnarok_style"
       path: "ragnarok_online_sprite_illustrious.safetensors"
       default_weight: 0.9
       triggers: ["pixel", "full body", "simple background"]
+      description: "Ragnarok Online inspired fantasy character sprites"
 
 # Generation Settings
 generation:
-  default_prompt_suffix: "high quality, sharp pixels, clean edges, vibrant colors"
-  default_negative: "blurry, low quality, jpeg artifacts, watermark, text, signature, realistic, photograph, white background, transparent background, gradient background"
+  default_prompt_suffix: "(((SPRITE, CLEAR BACKGROUND, BLACK OUTLINE))) high quality sprite, sharp pixels, clean edges, vibrant colors"
+  default_negative: "(((BACKGROUND DETAIL, BACKGROUND SCENERY, BACKGROUND OBJECTS))) blurry, low quality, jpeg artifacts, watermark, text, signature, realistic, photograph"
   
   presets:
     character_sprite:
