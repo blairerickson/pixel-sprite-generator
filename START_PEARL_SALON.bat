@@ -38,7 +38,8 @@ call :WaitForHealth "http://127.0.0.1:7860/sdapi/v1/sd-models" 120
 if errorlevel 1 (
     echo [ERROR] Stable Diffusion API did not respond in time.
     echo See log window "PearlOS Pixel Engine - SD" for details.
-    goto END
+    pause
+    goto :EOF
 )
 
 echo [3/4] Launching services...
@@ -59,7 +60,7 @@ echo.
 
 REM Open browser
 timeout /t 2 /nobreak >nul
-start http://127.0.0.1:8010/
+start http://127.0.0.1:8080/
 
 echo   Services running in background windows:
 echo   - Engine Core (minimized)

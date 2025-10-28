@@ -1,7 +1,7 @@
 @echo off
 echo Starting Stable Diffusion API...
-cd /d "%~dp0..\stable-diffusion-webui"
-set BOOTSTRAP_ENV=%~dp0..\backend\venv\Scripts\python.exe
+cd /d "%~dp0stable-diffusion-webui"
+set BOOTSTRAP_ENV=%~dp0backend\venv\Scripts\python.exe
 if exist "%BOOTSTRAP_ENV%" (
     echo    Using backend virtualenv Python: %BOOTSTRAP_ENV%
     set PYTHON=%BOOTSTRAP_ENV%

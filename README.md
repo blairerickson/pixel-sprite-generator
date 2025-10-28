@@ -31,7 +31,7 @@ Unified toolchain for generating, cleaning, and previewing pixel art sprites pow
    In a second terminal:
    ```bash
    cd frontend
-   python -m http.server 8010
+   python -m http.server 8080
    ```
    Optional: start Stable Diffusion on Linux/macOS with `bash stable-diffusion-webui/webui.sh --api --listen --port 7860`
 
@@ -39,7 +39,7 @@ Unified toolchain for generating, cleaning, and previewing pixel art sprites pow
 
 1. Launch Stable Diffusion (Windows: `1_START_SD.bat`)
 2. Start backend (`START_PEARL_SALON.bat` launches backend + frontend automatically)
-3. Open http://127.0.0.1:8010 to use the frontend
+3. Open http://127.0.0.1:8080 to use the frontend
 
 ## Stable Diffusion Assets
 
