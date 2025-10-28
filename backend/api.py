@@ -529,19 +529,37 @@ async def process_generation(job_id: str, request: GenerateRequest):
                         sprite_pixel_preview.save(sprite_pixel_preview_path)
                         pixel_variant["preview_url"] = f"/download/{job_id}/{sprite_pixel_preview_filename}"
 
-                    sprite_variants.append(pixel_variant)
-                    sprite_entry["variants"] = sprite_variants
-                    sprite_entry["raw"] = f"/download/{job_id}/{raw_filename}"
+                    sprite_variants = [pixel_variant, *sprite_variants]
+                    sprite_entry.update({
+                        "path": str(sprite_pixel_path.absolute()),
+                        "url": f"/download/{job_id}/{sprite_pixel_filename}",
+                        "size": [
+                            sprite_pixel_meta.get('scaled_width'),
+                            sprite_pixel_meta.get('scaled_height')
+                        ],
+                        "pixel_meta": sprite_pixel_meta,
+                        "variants": sprite_variants,
+                        "raw": f"/download/{job_id}/{raw_filename}",
+                        "original_sprite": {
+                            "path": str(sprite_path.absolute()),
+                            "url": f"/download/{job_id}/{sprite_path.name}",
+                            "size": sprite['size']
+                        }
+                    })
 
                     result_item["sprites"].append(sprite_entry)
                     assets["sprites"].append({
                         "image_index": idx,
                         "sprite_index": sprite_idx,
-                        "path": str(sprite_path.absolute()),
-                        "filename": sprite_path.name,
-                        "url": f"/download/{job_id}/{sprite_path.name}",
+                        "path": str(sprite_pixel_path.absolute()),
+                        "filename": sprite_pixel_filename,
+                        "url": f"/download/{job_id}/{sprite_pixel_filename}",
                         "bounds": sprite['bounds'],
-                        "size": sprite['size']
+                        "size": [
+                            sprite_pixel_meta.get('scaled_width'),
+                            sprite_pixel_meta.get('scaled_height')
+                        ],
+                        "variants": sprite_variants
                     })
                 result_item["sprite_qc"] = extraction_qc
                 qa_records.append({
@@ -577,22 +595,7 @@ async def process_generation(job_id: str, request: GenerateRequest):
 
         result_item["pixel_art"] = pixel_entry
 
-        image_variants = [
-            {
-                "key": "original",
-                "label": "Original",
-                "url": result_item["raw_url"],
-                "size": [image_data.width, image_data.height]
-            }
-        ]
- 
-        if result_item.get("processed_url") and result_item["processed_url"] != result_item["raw_url"]:
-            image_variants.append({
-                "key": "processed",
-                "label": "Processed",
-                "url": result_item["processed_url"],
-                "size": [processed_image.width, processed_image.height]
-            })
+        image_variants = []
 
         pixel_variant = {
             "key": "pixel",
@@ -609,6 +612,22 @@ async def process_generation(job_id: str, request: GenerateRequest):
             pixel_variant["preview_url"] = pixel_entry["preview"].get("url")
 
         image_variants.append(pixel_variant)
+
+        image_variants.append({
+            "key": "original",
+            "label": "Original",
+            "url": result_item["raw_url"],
+            "size": [image_data.width, image_data.height]
+        })
+
+        if result_item.get("processed_url") and result_item["processed_url"] != result_item["raw_url"]:
+            image_variants.append({
+                "key": "processed",
+                "label": "Processed",
+                "url": result_item["processed_url"],
+                "size": [processed_image.width, processed_image.height]
+            })
+
         result_item["variants"] = image_variants
 
         processed_results.append(result_item)

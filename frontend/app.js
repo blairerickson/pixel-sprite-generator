@@ -696,43 +696,49 @@ function handleResults(result, jobId = state.jobId) {
         
         if (img.sprites && img.sprites.length > 0) {
             img.sprites.forEach((sprite, spriteIdx) => {
-                const spriteVariants = sprite.variants?.map(variant => ({
+                const spriteVariants = (sprite.variants || []).map(variant => ({
                     ...variant,
                     url: variant.url?.startsWith('http') ? variant.url : `${API_BASE}${variant.url || ''}`,
                     preview_url: variant.preview_url?.startsWith('http') ? variant.preview_url : (variant.preview_url ? `${API_BASE}${variant.preview_url}` : null)
-                })) || [];
-                
-                const spriteUrl = `${API_BASE}/download/${jobId}/${sprite.path.split(/[/\\]/).pop()}`;
-                
+                }));
+
+                const preferredVariant = spriteVariants.find(variant => variant.key === 'pixel') || spriteVariants[0] || null;
+                const spriteUrl = preferredVariant?.url || `${API_BASE}/download/${jobId}/${sprite.path.split(/[/\\]/).pop()}`;
+
                 // First sprite is main, rest are children
                 if (!mainImagePath) {
-                    mainImagePath = sprite.path;
+                    mainImagePath = preferredVariant?.url?.replace(`${API_BASE}`, '') || sprite.path;
                     mainImageLabel = `Sprite ${new Date().toLocaleTimeString()}`;
                     mainQc = sprite.qc;
                     firstImageIndex = idx;
                 }
-                
+
                 // Add to filmstrip
                 allSpritesForFilmstrip.push({
                     url: spriteUrl,
                     label: `Sprite ${spriteIdx + 1}`,
-                    size: sprite.size,
-                    metadata: sprite
+                    size: preferredVariant?.size || sprite.size,
+                    metadata: {
+                        ...sprite,
+                        variants: spriteVariants,
+                        preferred_variant: preferredVariant
+                    }
                 });
-                
+
                 // Add to children (all except first)
                 if (spriteIdx > 0 || idx > 0) {
                     childImagesForMenu.push({
                         url: spriteUrl,
                         label: `Sprite ${spriteIdx + 1}`,
-                        size: sprite.size
+                        size: preferredVariant?.size || sprite.size
                     });
                 }
 
                 newFrames.push({
                     url: spriteUrl,
-                    size: sprite.size,
-                    variants: spriteVariants
+                    size: preferredVariant?.size || sprite.size,
+                    variants: spriteVariants,
+                    preferredVariantKey: preferredVariant?.key
                 });
                 qaRecords.push({
                     type: 'sprite',
@@ -1034,11 +1040,14 @@ function handleAliveSequence(sequence, jobId = null) {
 function addToGallery(imagePath, label, jobId, qcInfo = null, options = {}) {
     const extractIndex = options.imageIndex ?? 0;
     const variantSet = options.variants ?? [];
+    const preferredVariant = variantSet.find(v => v.key === 'pixel') || variantSet[0] || null;
     const filmstripEntries = options.filmstrip ?? [];
     const childImages = options.childImages ?? []; // FIXED #9: Get child images from options
     const filename = imagePath.split(/[/\\]/).pop();
     const isAbsolute = imagePath.startsWith('http://') || imagePath.startsWith('https://');
-    const url = isAbsolute ? imagePath : `${API_BASE}/download/${jobId}/${filename}`;
+    const url = preferredVariant?.url
+        ? preferredVariant.url
+        : (isAbsolute ? imagePath : `${API_BASE}/download/${jobId}/${filename}`);
     
     // Generate better name if label is generic
     const betterLabel = generateBetterLabel(label, options);
@@ -1053,8 +1062,8 @@ function addToGallery(imagePath, label, jobId, qcInfo = null, options = {}) {
     item.dataset.filmstrip = JSON.stringify(filmstripEntries);
     const qcBadge = buildQcBadge(qcInfo);
     const qaPayload = qcInfo ? btoa(encodeURIComponent(JSON.stringify(qcInfo))) : '';
-    const resolutionLabel = options.variants?.[0]?.size
-        ? `${options.variants[0].size[0]}×${options.variants[0].size[1]}`
+    const resolutionLabel = preferredVariant?.size
+        ? `${preferredVariant.size[0]}×${preferredVariant.size[1]}`
         : '';
     item.innerHTML = `
         <img src="${url}" alt="${betterLabel}" loading="lazy">
@@ -1121,11 +1130,14 @@ function generateBetterLabel(originalLabel, options = {}) {
 function addToGallery(imagePath, label, jobId, qcInfo = null, options = {}) {
     const extractIndex = options.imageIndex ?? 0;
     const variantSet = options.variants ?? [];
+    const preferredVariant = variantSet.find(v => v.key === 'pixel') || variantSet[0] || null;
     const filmstripEntries = options.filmstrip ?? [];
     const childImages = options.childImages ?? []; // FIXED #9: Get child images from options
     const filename = imagePath.split(/[/\\]/).pop();
     const isAbsolute = imagePath.startsWith('http://') || imagePath.startsWith('https://');
-    const url = isAbsolute ? imagePath : `${API_BASE}/download/${jobId}/${filename}`;
+    const url = preferredVariant
+        ? (preferredVariant.url?.startsWith('http') ? preferredVariant.url : `${API_BASE}${preferredVariant.url || ''}`)
+        : (isAbsolute ? imagePath : `${API_BASE}/download/${jobId}/${filename}`);
     
     // Generate better name if label is generic
     const betterLabel = generateBetterLabel(label, options);
@@ -1140,8 +1152,8 @@ function addToGallery(imagePath, label, jobId, qcInfo = null, options = {}) {
     item.dataset.filmstrip = JSON.stringify(filmstripEntries);
     const qcBadge = buildQcBadge(qcInfo);
     const qaPayload = qcInfo ? btoa(encodeURIComponent(JSON.stringify(qcInfo))) : '';
-    const resolutionLabel = options.variants?.[0]?.size
-        ? `${options.variants[0].size[0]}×${options.variants[0].size[1]}`
+    const resolutionLabel = preferredVariant?.size
+        ? `${preferredVariant.size[0]}×${preferredVariant.size[1]}`
         : '';
     item.innerHTML = `
         <img src="${url}" alt="${betterLabel}" loading="lazy">
@@ -1789,24 +1801,39 @@ async function loadModels() {
         // Populate base model dropdown
         if (el.baseModel) {
             el.baseModel.innerHTML = '';
-            
-            // Add only the default PearlPixels model
-            const option = document.createElement('option');
-            option.value = 'pixelArtDiffusionXL_spriteShaper.safetensors';
-            option.textContent = 'PearlPixels';
-            option.setAttribute('selected', 'true');
-            el.baseModel.appendChild(option);
+
+            const addModelOption = (modelPath, isSelected = false) => {
+                if (!modelPath) return;
+                const option = document.createElement('option');
+                option.value = modelPath;
+                const cleanLabel = modelPath.split(/[\\/]/).pop().replace(/\.[^/.]+$/, '');
+                option.textContent = cleanLabel;
+                if (isSelected) option.selected = true;
+                el.baseModel.appendChild(option);
+            };
+
+            addModelOption(data.base_model, true);
+            (data.alternative_models || []).forEach(model => addModelOption(model));
+
+            if (data.available_sd_models && Array.isArray(data.available_sd_models)) {
+                data.available_sd_models.forEach(model => {
+                    if (!model) return;
+                    const value = model.model_name || model.name || model;
+                    addModelOption(value);
+                });
+            }
         }
         
         // Populate LoRA dropdown
         if (el.lora) {
             el.lora.innerHTML = '<option value="">Style: Base model</option>';
             (data.loras || []).forEach(lora => {
+                if (!lora?.name) return;
                 const option = document.createElement('option');
                 option.value = lora.name;
-                const displayName = lora.name.replace(/_/g, ' ');
-                const description = lora.description ? ` - ${lora.description}` : '';
-                option.textContent = `Style: ${displayName}${description}`;
+                const cleanName = lora.name.split(/[\\/]/).pop().replace(/\.[^/.]+$/, '').replace(/_/g, ' ');
+                const description = lora.description ? ` – ${lora.description}` : '';
+                option.textContent = `Style: ${cleanName}${description}`;
                 el.lora.appendChild(option);
             });
         }
@@ -2064,13 +2091,15 @@ function openGalleryViewer(itemElement, overrideUrl = null) {
         ];
     }
 
-    viewerState.currentVariant = 0;
+    const initialIndex = Math.max(0, viewerState.variants.findIndex(variant => variant.key === 'pixel'));
+
+    viewerState.currentVariant = initialIndex;
     viewerState.currentFilmIndex = 0;
     viewerState.playing = false;
     stopViewerPlayback();
 
     el.galleryViewer.classList.remove('hidden');
-    const initialVariant = viewerState.variants[0];
+    const initialVariant = viewerState.variants[initialIndex] || viewerState.variants[0];
     const initialUrl = overrideUrl || initialVariant?.url || dataset.url;
     if (el.galleryViewerFps) el.galleryViewerFps.value = viewerState.fps;
     applyViewerZoom(initialVariant);

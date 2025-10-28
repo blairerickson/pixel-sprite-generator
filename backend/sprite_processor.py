@@ -78,28 +78,32 @@ class SpriteProcessor:
     ) -> Tuple[Image.Image, Dict[str, Any]]:
         """Remove background from image and return QC metadata."""
         method = self.bg_config['method']
-        
+
+        preprocess_enabled = self.pixel_config.get('enabled', False)
+        preprocessed_for_mask = self._preprocess_image(image) if preprocess_enabled else image
+
         if method == 'chromakey':
             # First, preprocess to create true pixel art (resize + palette)
-            image = self._preprocess_image(image)
-            
+            working_image = preprocessed_for_mask
+
             # Check if image already has magenta edges (from inpainting)
-            has_magenta_edges = self._check_for_magenta_edges(image)
-            
+            has_magenta_edges = self._check_for_magenta_edges(working_image)
+
             if not has_magenta_edges:
                 # Inject magenta background for consistent chromakey removal
                 logger.info("[Background Removal] No magenta edges detected, injecting background")
-                image = self._inject_magenta_background(image)
+                working_image = self._inject_magenta_background(working_image)
             else:
                 logger.info("[Background Removal] Pure magenta edges detected (inpaint mode), skipping injection")
-            
-            return await self._remove_chromakey(image, output_dir=output_dir, prefix=prefix)
+
+            return await self._remove_chromakey(working_image, output_dir=output_dir, prefix=prefix)
         elif method == 'rembg':
-            # Try rembg with safety checks
-            processed, qc_info = await self._remove_rembg_safe(image)
+            # Try rembg with safety checks. If preprocessing is enabled, use the simplified
+            # version for mask estimation while retaining the original for outline restoration.
+            processed, qc_info = await self._remove_rembg_safe(preprocessed_for_mask, original_image=image)
             return processed, qc_info
         elif method == 'transparent-background':
-            processed = await self._remove_transparent_background(image)
+            processed = await self._remove_transparent_background(preprocessed_for_mask)
             return processed, self._default_qc_info(passed=True, method_used='transparent-background')
         else:
             raise ValueError(f"Unsupported background removal method: {method}")
@@ -598,7 +602,11 @@ class SpriteProcessor:
         
         return processed_image, qc_info
     
-    async def _remove_rembg_safe(self, image: Image.Image) -> Tuple[Image.Image, Dict[str, Any]]:
+    async def _remove_rembg_safe(
+        self,
+        image: Image.Image,
+        original_image: Optional[Image.Image] = None
+    ) -> Tuple[Image.Image, Dict[str, Any]]:
         """Remove background using rembg with pixel art optimizations and safety checks"""
         try:
             from rembg import remove, new_session
@@ -609,7 +617,7 @@ class SpriteProcessor:
             # Check if we should skip rembg for pixel art
             if rembg_config.get('force_chromakey_for_pixel_art', False):
                 logger.info("[Background Removal] Pixel art mode - skipping rembg, using chromakey")
-                return await self._remove_chromakey(image)
+                return await self._remove_chromakey(original_image or image)
             
             logger.info("[Background Removal] Trying rembg (AI-based removal)...")
             
@@ -641,7 +649,7 @@ class SpriteProcessor:
                     logger.warning(f"[Background Removal] Rembg too aggressive ({transparency_percent:.1f}% > {aggressiveness_threshold}%), falling back to chromakey")
                     
                     # Fallback to chromakey method
-                    return await self._remove_chromakey(image)
+                    return await self._remove_chromakey(original_image or image)
                 
                 # Apply pixel art optimizations if enabled
                 if rembg_config.get('pixel_art_mode', True):
@@ -660,11 +668,11 @@ class SpriteProcessor:
             else:
                 # No alpha channel - rembg failed
                 logger.warning("[Background Removal] Rembg produced no alpha channel, falling back to chromakey")
-                return await self._remove_chromakey(image)
+                return await self._remove_chromakey(original_image or image)
                 
         except ImportError:
             logger.error("[Background Removal] rembg not installed, falling back to chromakey")
-            return await self._remove_chromakey(image)
+            return await self._remove_chromakey(original_image or image)
         except Exception as e:
             logger.error(f"[Background Removal] Rembg error: {e}, falling back to chromakey")
             return await self._remove_chromakey(image)
