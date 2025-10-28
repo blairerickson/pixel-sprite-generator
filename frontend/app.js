@@ -54,7 +54,10 @@ async function setGalleryBackground(imageUrl, filename) {
             body: JSON.stringify(payload)
         });
 
-        if (!response.ok) throw new Error('Failed to set background');
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+            throw new Error(errorData.detail || 'Failed to set background');
+        }
 
         const data = await response.json();
         backgroundState.current = data.url;
@@ -65,7 +68,7 @@ async function setGalleryBackground(imageUrl, filename) {
         showStatus('Background updated', 'success');
     } catch (error) {
         console.error('Failed to set gallery background:', error);
-        showStatus('Background update failed', 'error');
+        showStatus(`Background update failed: ${error.message}`, 'error');
     }
 }
 
@@ -2435,6 +2438,11 @@ async function resetBackground() {
 function updateBackgroundImage(url) {
     if (!el.backgroundImage) return;
 
+    // Make sure URL is absolute
+    if (url && !url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('data:')) {
+        url = url.startsWith('/') ? `${API_BASE}${url}` : `${API_BASE}/${url}`;
+    }
+
     const img = el.backgroundImage;
     const stageBg = document.getElementById('stageBackground');
 
@@ -2446,12 +2454,12 @@ function updateBackgroundImage(url) {
     };
 
     const handleError = () => {
-        console.warn('Unable to load background image preview:', url);
+        console.warn('Unable to load background image:', url);
         img.classList.remove('background-loading');
         img.style.opacity = '1';
         img.removeEventListener('load', handleLoad);
         img.removeEventListener('error', handleError);
-        showStatus('Background image preview unavailable', 'warning');
+        showStatus('Background image unavailable', 'warning');
     };
 
     img.addEventListener('load', handleLoad);

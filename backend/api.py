@@ -1599,27 +1599,37 @@ async def set_background_from_gallery(payload: GalleryBackgroundRequest):
         raise HTTPException(status_code=400, detail="Image URL required")
 
     try:
-        if image_url.startswith('http://') or image_url.startswith('https://'):
+        # Handle full URLs by stripping the base URL
+        if image_url.startswith('http://127.0.0.1:8010') or image_url.startswith('http://localhost:8010'):
+            # Extract the path part after the base URL
+            if '//' in image_url:
+                parts = image_url.split('//', 1)[1].split('/', 1)
+                if len(parts) > 1:
+                    image_url = '/' + parts[1]
+                else:
+                    image_url = '/'
+        elif image_url.startswith('http://') or image_url.startswith('https://'):
             raise HTTPException(status_code=400, detail="External URLs not supported")
+        
+        # Now process the relative URL
+        if image_url.startswith('/download/'):
+            parts = image_url.strip('/').split('/')
+            if len(parts) != 3 or parts[0] != 'download':
+                raise HTTPException(status_code=400, detail="Invalid gallery URL")
+            job_id, filename = parts[1], parts[2]
+            candidate = Path(config['paths']['output_dir']) / job_id / filename
+            if not candidate.exists():
+                raise HTTPException(status_code=404, detail="Gallery asset not found")
+            disk_path = candidate
         else:
-            if image_url.startswith('/download/'):
-                parts = image_url.strip('/').split('/')
-                if len(parts) != 3 or parts[0] != 'download':
-                    raise HTTPException(status_code=400, detail="Invalid gallery URL")
-                job_id, filename = parts[1], parts[2]
-                candidate = Path(config['paths']['output_dir']) / job_id / filename
-                if not candidate.exists():
-                    raise HTTPException(status_code=404, detail="Gallery asset not found")
-                disk_path = candidate
-            else:
-                relative_path = image_url.lstrip('/')
-                disk_path = Path(relative_path)
-                if not disk_path.exists():
-                    disk_path = Path(config['paths']['output_dir']) / relative_path
-                if not disk_path.exists():
-                    raise HTTPException(status_code=404, detail="Image not found on disk")
-            with open(disk_path, 'rb') as fh:
-                content = fh.read()
+            relative_path = image_url.lstrip('/')
+            disk_path = Path(relative_path)
+            if not disk_path.exists():
+                disk_path = Path(config['paths']['output_dir']) / relative_path
+            if not disk_path.exists():
+                raise HTTPException(status_code=404, detail="Image not found on disk")
+        with open(disk_path, 'rb') as fh:
+            content = fh.read()
 
         background_id = uuid.uuid4().hex
         target_path = BACKGROUND_DIR / f"{background_id}.png"
