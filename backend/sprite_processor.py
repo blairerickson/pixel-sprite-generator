@@ -53,6 +53,17 @@ class SpriteProcessor:
 
         small = paletted.resize((new_width, new_height), Image.Resampling.NEAREST)
 
+        # Harden alpha channel to eliminate halo artifacts from partial transparency
+        alpha_threshold = max(0, min(255, int(cfg.get('alpha_threshold', 160))))
+        data = np.array(small)
+        alpha_channel = data[:, :, 3]
+        transparent_mask = alpha_channel < alpha_threshold
+        if np.any(transparent_mask):
+            data[transparent_mask, 3] = 0
+            # Clear RGB for transparent pixels to avoid white bleed
+            data[transparent_mask, :3] = 0
+            small = Image.fromarray(data, 'RGBA')
+
         preview = None
         if upscale_factor > 1:
             preview = small.resize(
@@ -63,6 +74,7 @@ class SpriteProcessor:
         metadata = {
             'target_size': target_size,
             'palette_size': palette_size,
+            'alpha_threshold': alpha_threshold,
             'scaled_width': new_width,
             'scaled_height': new_height,
             'upscale_factor': upscale_factor

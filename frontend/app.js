@@ -703,11 +703,14 @@ function handleResults(result, jobId = state.jobId) {
                 }));
 
                 const preferredVariant = spriteVariants.find(variant => variant.key === 'pixel') || spriteVariants[0] || null;
-                const spriteUrl = preferredVariant?.url || `${API_BASE}/download/${jobId}/${sprite.path.split(/[/\\]/).pop()}`;
+                const spriteUrl = preferredVariant?.url
+                    ? (preferredVariant.url.startsWith('http') ? preferredVariant.url : `${API_BASE}${preferredVariant.url}`)
+                    : `${API_BASE}/download/${jobId}/${sprite.path.split(/[/\\]/).pop()}`;
+                const spriteSize = preferredVariant?.size || sprite.size;
 
                 // First sprite is main, rest are children
                 if (!mainImagePath) {
-                    mainImagePath = preferredVariant?.url?.replace(`${API_BASE}`, '') || sprite.path;
+                    mainImagePath = spriteUrl;
                     mainImageLabel = `Sprite ${new Date().toLocaleTimeString()}`;
                     mainQc = sprite.qc;
                     firstImageIndex = idx;
@@ -717,7 +720,7 @@ function handleResults(result, jobId = state.jobId) {
                 allSpritesForFilmstrip.push({
                     url: spriteUrl,
                     label: `Sprite ${spriteIdx + 1}`,
-                    size: preferredVariant?.size || sprite.size,
+                    size: spriteSize,
                     metadata: {
                         ...sprite,
                         variants: spriteVariants,
@@ -730,13 +733,13 @@ function handleResults(result, jobId = state.jobId) {
                     childImagesForMenu.push({
                         url: spriteUrl,
                         label: `Sprite ${spriteIdx + 1}`,
-                        size: preferredVariant?.size || sprite.size
+                        size: spriteSize
                     });
                 }
 
                 newFrames.push({
                     url: spriteUrl,
-                    size: preferredVariant?.size || sprite.size,
+                    size: spriteSize,
                     variants: spriteVariants,
                     preferredVariantKey: preferredVariant?.key
                 });
@@ -809,17 +812,19 @@ function handleResults(result, jobId = state.jobId) {
     
     // FIXED #1: Create ONLY ONE gallery entry with all images
     if (mainImagePath) {
-        addToGallery(mainImagePath, mainImageLabel, jobId, mainQc, {
+        const firstSprite = allSpritesForFilmstrip[0];
+        const firstSpriteUrl = firstSprite?.url || `${API_BASE}/download/${jobId}/${mainImagePath.split(/[/\\]/).pop()}`;
+        const firstSpriteSize = firstSprite?.size || [512, 512];
+        addToGallery(firstSpriteUrl, mainImageLabel, jobId, mainQc, {
             imageIndex: firstImageIndex,
             filmstrip: allSpritesForFilmstrip,
-            childImages: childImagesForMenu
+            childImages: childImagesForMenu,
+            size: firstSpriteSize
         });
-        
+
         // FIXED #22: Auto-display newly generated sprite in sprite box
-        const firstSpriteUrl = allSpritesForFilmstrip[0]?.url || 
-                               `${API_BASE}/download/${jobId}/${mainImagePath.split(/[/\\]/).pop()}`;
         setTimeout(() => {
-            displayInStage(firstSpriteUrl);
+            displayInStage(firstSpriteUrl, firstSpriteSize);
         }, 300); // Small delay for dramatic reveal
     }
 
@@ -1042,16 +1047,18 @@ function addToGallery(imagePath, label, jobId, qcInfo = null, options = {}) {
     const variantSet = options.variants ?? [];
     const preferredVariant = variantSet.find(v => v.key === 'pixel') || variantSet[0] || null;
     const filmstripEntries = options.filmstrip ?? [];
-    const childImages = options.childImages ?? []; // FIXED #9: Get child images from options
+    const childImages = options.childImages ?? [];
     const filename = imagePath.split(/[/\\]/).pop();
     const isAbsolute = imagePath.startsWith('http://') || imagePath.startsWith('https://');
+
+    const preferredSize = preferredVariant?.size || options.size || null;
     const url = preferredVariant?.url
-        ? preferredVariant.url
+        ? (preferredVariant.url.startsWith('http') ? preferredVariant.url : `${API_BASE}${preferredVariant.url}`)
         : (isAbsolute ? imagePath : `${API_BASE}/download/${jobId}/${filename}`);
-    
+
     // Generate better name if label is generic
     const betterLabel = generateBetterLabel(label, options);
-    
+
     const item = document.createElement('div');
     item.className = 'gallery-item';
     item.dataset.jobId = jobId;
@@ -1060,10 +1067,13 @@ function addToGallery(imagePath, label, jobId, qcInfo = null, options = {}) {
     item.dataset.label = betterLabel;
     item.dataset.variants = JSON.stringify(variantSet);
     item.dataset.filmstrip = JSON.stringify(filmstripEntries);
+    if (preferredSize) {
+        item.dataset.dimensions = JSON.stringify(preferredSize);
+    }
     const qcBadge = buildQcBadge(qcInfo);
     const qaPayload = qcInfo ? btoa(encodeURIComponent(JSON.stringify(qcInfo))) : '';
-    const resolutionLabel = preferredVariant?.size
-        ? `${preferredVariant.size[0]}×${preferredVariant.size[1]}`
+    const resolutionLabel = preferredSize
+        ? `${preferredSize[0]}×${preferredSize[1]}`
         : '';
     item.innerHTML = `
         <img src="${url}" alt="${betterLabel}" loading="lazy">
@@ -1132,16 +1142,18 @@ function addToGallery(imagePath, label, jobId, qcInfo = null, options = {}) {
     const variantSet = options.variants ?? [];
     const preferredVariant = variantSet.find(v => v.key === 'pixel') || variantSet[0] || null;
     const filmstripEntries = options.filmstrip ?? [];
-    const childImages = options.childImages ?? []; // FIXED #9: Get child images from options
+    const childImages = options.childImages ?? [];
     const filename = imagePath.split(/[/\\]/).pop();
     const isAbsolute = imagePath.startsWith('http://') || imagePath.startsWith('https://');
-    const url = preferredVariant
-        ? (preferredVariant.url?.startsWith('http') ? preferredVariant.url : `${API_BASE}${preferredVariant.url || ''}`)
+
+    const preferredSize = preferredVariant?.size || options.size || null;
+    const url = preferredVariant?.url
+        ? (preferredVariant.url.startsWith('http') ? preferredVariant.url : `${API_BASE}${preferredVariant.url}`)
         : (isAbsolute ? imagePath : `${API_BASE}/download/${jobId}/${filename}`);
-    
+
     // Generate better name if label is generic
     const betterLabel = generateBetterLabel(label, options);
-    
+
     const item = document.createElement('div');
     item.className = 'gallery-item';
     item.dataset.jobId = jobId;
@@ -1150,10 +1162,13 @@ function addToGallery(imagePath, label, jobId, qcInfo = null, options = {}) {
     item.dataset.label = betterLabel;
     item.dataset.variants = JSON.stringify(variantSet);
     item.dataset.filmstrip = JSON.stringify(filmstripEntries);
+    if (preferredSize) {
+        item.dataset.dimensions = JSON.stringify(preferredSize);
+    }
     const qcBadge = buildQcBadge(qcInfo);
     const qaPayload = qcInfo ? btoa(encodeURIComponent(JSON.stringify(qcInfo))) : '';
-    const resolutionLabel = preferredVariant?.size
-        ? `${preferredVariant.size[0]}×${preferredVariant.size[1]}`
+    const resolutionLabel = preferredSize
+        ? `${preferredSize[0]}×${preferredSize[1]}`
         : '';
     item.innerHTML = `
         <img src="${url}" alt="${betterLabel}" loading="lazy">
@@ -1177,7 +1192,8 @@ function addToGallery(imagePath, label, jobId, qcInfo = null, options = {}) {
         
         // Display main image in sprite box
         const urlToDisplay = filmstripEntries?.[0]?.url || url;
-        displayInStage(urlToDisplay);
+        const sizeToDisplay = filmstripEntries?.[0]?.size || preferredSize;
+        displayInStage(urlToDisplay, sizeToDisplay);
         
         // Highlight this item as active
         document.querySelectorAll('.gallery-item').forEach(gi => 
@@ -1335,9 +1351,10 @@ function addToGallery(imagePath, label, jobId, qcInfo = null, options = {}) {
 }
 
 // Display a given image URL on the main stage (center canvas)
-function displayInStage(url) {
+function displayInStage(url, size = null) {
     if (!url || !el.canvas || !el.ctx) return;
-    state.frames = [{ url }];
+    const frameSize = size || state.frames?.[0]?.size || [el.canvas.width, el.canvas.height];
+    state.frames = [{ url, size: frameSize }];
     state.currentFrame = 0;
     updateFrameDisplay();
     drawFrame();
@@ -1829,8 +1846,8 @@ async function loadModels() {
             el.lora.innerHTML = '<option value="">Style: Base model</option>';
             (data.loras || []).forEach(lora => {
                 if (!lora?.name) return;
-                const option = document.createElement('option');
-                option.value = lora.name;
+                    const option = document.createElement('option');
+                    option.value = lora.path || lora.name;
                 const cleanName = lora.name.split(/[\\/]/).pop().replace(/\.[^/.]+$/, '').replace(/_/g, ' ');
                 const description = lora.description ? ` – ${lora.description}` : '';
                 option.textContent = `Style: ${cleanName}${description}`;

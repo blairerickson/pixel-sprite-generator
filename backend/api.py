@@ -543,7 +543,13 @@ async def process_generation(job_id: str, request: GenerateRequest):
                         "original_sprite": {
                             "path": str(sprite_path.absolute()),
                             "url": f"/download/{job_id}/{sprite_path.name}",
-                            "size": sprite['size']
+                            "size": sprite['size'],
+                            "variant": {
+                                "key": "processed",
+                                "label": "Processed",
+                                "url": f"/download/{job_id}/{sprite_path.name}",
+                                "size": [sprite['size'][0], sprite['size'][1]]
+                            }
                         }
                     })
 
@@ -581,6 +587,10 @@ async def process_generation(job_id: str, request: GenerateRequest):
         pixel_entry = {
             "path": str(pixel_path.absolute()),
             "url": f"/download/{job_id}/{pixel_filename}",
+            "size": [
+                pixel_meta.get('scaled_width'),
+                pixel_meta.get('scaled_height')
+            ],
             **pixel_meta
         }
 
@@ -605,7 +615,8 @@ async def process_generation(job_id: str, request: GenerateRequest):
                 pixel_meta.get('scaled_width'),
                 pixel_meta.get('scaled_height')
             ],
-            "meta": pixel_meta
+            "meta": pixel_meta,
+            "path": str(pixel_path.name)
         }
 
         if pixel_entry.get("preview"):
