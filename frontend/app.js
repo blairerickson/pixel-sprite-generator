@@ -19,7 +19,10 @@ window.triggerFrameExtraction = async function(jobId, imageIndex) {
     }
 };
 // Pearl's Pixel Studio - Main Application
-const API_BASE = 'http://127.0.0.1:8010';
+// Use empty string for production (ngrok/same domain) or localhost for local dev
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? 'http://127.0.0.1:8010' 
+    : ''; // Empty string uses same domain (works with ngrok)
 
 // State
 const state = {
