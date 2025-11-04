@@ -224,6 +224,30 @@ async def root():
         "backend": config['sd']['backend']
     }
 
+# Serve individual frontend static files
+@app.get("/style.css")
+async def serve_css():
+    return FileResponse(Path(__file__).parent.parent / "frontend" / "style.css")
+
+@app.get("/app.js")
+async def serve_app_js():
+    return FileResponse(Path(__file__).parent.parent / "frontend" / "app.js")
+
+@app.get("/prompts.js")
+async def serve_prompts_js():
+    return FileResponse(Path(__file__).parent.parent / "frontend" / "prompts.js")
+
+@app.get("/advanced-settings.js")
+async def serve_advanced_settings_js():
+    return FileResponse(Path(__file__).parent.parent / "frontend" / "advanced-settings.js")
+
+@app.get("/background.png")
+async def serve_background_png():
+    bg_path = Path(__file__).parent.parent / "frontend" / "background.png"
+    if bg_path.exists():
+        return FileResponse(bg_path)
+    return FileResponse(Path(__file__).parent.parent / "assets" / "background.png")
+
 @app.get("/health")
 async def health_check():
     """Check if SD backend is available"""
@@ -1704,10 +1728,10 @@ if __name__ == "__main__":
     # Mount static files AFTER all routes to avoid conflicts
     app.mount("/output", StaticFiles(directory=str(output_dir)), name="output")
     
-    # Mount frontend assets (CSS, JS, images)
+    # Mount frontend directory to serve static assets
     frontend_dir = Path(__file__).parent.parent / "frontend"
     if frontend_dir.exists():
-        app.mount("/frontend", StaticFiles(directory=str(frontend_dir)), name="frontend")
+        app.mount("/static", StaticFiles(directory=str(frontend_dir)), name="static")
     
     # Frame serving handled by specific endpoint above
     

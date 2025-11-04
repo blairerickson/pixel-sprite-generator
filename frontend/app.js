@@ -109,6 +109,7 @@ const el = {};
 // Mode presets mapping
 const MODE_PRESETS = {
     character: 'character_sprite',
+    icon: 'icon_sprite',
     alive: 'character_sprite',
     background: 'character_sprite'
 };

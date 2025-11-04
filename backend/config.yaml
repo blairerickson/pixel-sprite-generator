@@ -7,7 +7,7 @@ sd:
   
   # Model paths (relative to SD models folder)
   models:
-    base_model: "pixelArtDiffusionXL_spriteShaper.safetensors"
+    base_model: "allInOnePixelModel_v1.ckpt"
     alternative_models: []
   
   loras:
@@ -41,6 +41,14 @@ generation:
       height: 512
       steps: 25
       cfg_scale: 7.0
+      sampler: "DPM++ 2M Karras"
+    
+    icon_sprite:
+      prompt_template: "{description}, pixel art icon, game item, centered, clean design, detailed, vibrant colors, solid color background"
+      width: 256
+      height: 256
+      steps: 30
+      cfg_scale: 7.5
       sampler: "DPM++ 2M Karras"
     
     animation_frames:
